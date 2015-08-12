@@ -1,0 +1,30 @@
+# run these lines one-by-one in your terminal, changing locations as necessary
+
+### to standardize all videos to be the same format:
+# find all .avi files, save to a dummy file
+find "/Volumes/LPRLABBKP/CRTliveVsBKG" | grep ".avi" > listOfVideos
+# do a sed replacement to insert the ffmpeg command
+cat listOfVideos | sed 's,^\(.*\)\(trial.*\).avi,ffmpeg -i \1\2.avi -vcodec libx264 -y /Users/lukereding/Desktop/CRTliveVsBkg/\2.mp4,' > remakeVids
+# replace spaces with '/', put in the ffmpeg command
+# change the permissions
+chmod +x remakeVids
+# before running, try
+cat remakeVids | head
+# to make sure everything looks good
+# then to run:
+./remakeVids
+
+
+### splitting up videos
+# here, we need 5 min - 10 min and 15 min - end
+# grab all mp4 files from the directory, add the ffmpeg command
+ls | grep ".mp4" | sed 's,\(trial.*\).mp4,ffmpeg -ss 300 -i \1.mp4 -t 300 -vcodec libx264 \1_part1.mp4,' > part1
+ls | grep ".mp4" | sed 's,\(trial.*\).mp4,ffmpeg -ss 900 -i \1.mp4 -t 300 -vcodec libx264 \1_part2.mp4,' > part2
+cat part1 part2 > combined
+chmod +x combined
+./combined
+
+### tracking the videos
+# run the tracking program in on all the videos
+find "/Users/lukereding/Desktop/correctedVideos" | grep "_part[12].avi" > listOfVideos
+cat listOfVideos | sed 's,^\(.*\),python /Users/lukereding/Desktop/workingHere/differenceImageGravel.py -i \1,' > list
