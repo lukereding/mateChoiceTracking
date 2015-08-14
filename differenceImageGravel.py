@@ -114,8 +114,7 @@ def returnLargeContour(frame):
 		#the main filtering statement
 		if area > 150 and area < 1600 and aspect_ratio <= 3.5 and aspect_ratio >= 0.3:
 			potential_centroids.append(z)
-			print area
-			print aspect_ratio
+			print "area: " + str(area) + "; aspect_ratio: " + str(aspect_ratio)
 
 	largestCon = sorted(potential_centroids, key = cv2.contourArea, reverse = True)[:1]
 
@@ -123,16 +122,11 @@ def returnLargeContour(frame):
 		csv_writer.writerow(("NA","NA",counter))
 		return()
 	else:
-		for j in largestCon:	
-			m = cv2.moments(j)		
-			centroid_x = int(m['m10']/m['m00'])
-			centroid_y = int(m['m01']/m['m00'])
-			csv_writer.writerow((centroid_x,centroid_y,counter))
-			if len(contours)<25:
-				return((centroid_x,centroid_y))
-			else:
-				csv_writer.writerow(("NA","NA",counter))
-				return()
+		m = cv2.moments(largestCon)
+		centroid_x = int(m['m10']/m['m00'])
+		centroid_y = int(m['m01']/m['m00'])
+		csv_writer.writerow((centroid_x,centroid_y,counter))
+		return((centroid_x,centroid_y))
 
 # might be nice to try to get an image of the background without the fish
 # computes an 'average' photo of the first numFrames frames from the video
@@ -162,7 +156,7 @@ def getBackgroundImage(vid,numFrames):
 			print "detecting background -- on frame " + str(i) + " of " + str(numFrames)
 	return final
 
-##############
+###################
 ## end function declarations ####
 ###################################################
 
