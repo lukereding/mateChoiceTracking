@@ -4,6 +4,9 @@ this function calculates that percent of time a fish spends on the white side of
 example of usage: 
 
 started 13 August 2015, luke reding
+
+14 August: as of now, works OK, not great. maybe require parameter tweaking. Right now based all on doing image manipulations after conversion to greyscale
+Perhaps using HSV will actually work better though, e.g., allow better ID of the fish from the noise around the tank?
 """
 
 import cv2, sys, csv, re
@@ -39,16 +42,18 @@ def findStartingPoint(video,numberOfFrames):
 	# the function will go numberOfFrames frames ahead in the video and do a subtraction
 	# the hope is that the fish will have moved at some point during this time
 	count = 0
+	ret, initial = video.read()
+	initial = grey(initial)
 	# I don't know a better way to jump ahead so many frames
 	while count <= numberOfFrames:
 		# read in the frame for each tick of the loop
 		ret,frame = video.read()
 		# grab a frame from the middle. Assume the screens have turned on by then
 		if count == numberOfFrames/2:
-			hsv_middle = convertToHSV(frame)
+			middle = grey(frame)
 		if count == numberOfFrames:
 			# grab the last frame in the numberOfFrames window
-			hsv_end = convertToHSV(frame)
+			end = grey(frame)
 		count += 1
 		if count == 1:
 			print "initializing"
@@ -56,16 +61,16 @@ def findStartingPoint(video,numberOfFrames):
 		
 	# now we have masked HSV photos from the beginning, middle, and end of the initialization period
 	# now we have to do some funky subtraction to get rid of the signal that results from the screen being turn on
-	difference2 = cv2.subtract(hsv_end,hsv_initial)
-	difference1 = cv2.subtract(hsv_end,hsv_middle)
+	difference2 = cv2.subtract(end,initial)
+	difference1 = cv2.subtract(end,middle)
 	difference3 = cv2.subtract(difference1,difference2)
 	
 	# now we have what we want
-	thresh = cv2.inRange(difference3,np.array([0,0,0]),np.array([255,255,25]))
+	thresh = cv2.inRange(difference3,0,50)
 	# need to invert the colors or else we run into trouble on our call to cv2.findContours
 	invert = cv2.bitwise_not(thresh)
 	startingPoint = returnLargeContour(invert)
-	return(startingPoint)
+	return startingPoint,difference3
 	
 
 
@@ -107,10 +112,19 @@ def returnLargeContour(frame):
 				return()
 
 
+def grey(frame):
+	# blur the image
+	blurred = cv2.blur(frame,(5,5))
+	# convert to greyscale
+	greyed = cv2.cvtColor(blurred, cv2.COLOR_BGR2GRAY)
+	return greyed
+	
+
 ## end function declarations
 
 # grab the first frame
 ret,initial = cap.read()
+initial = grey(initial)
 
 # the main loop
 while(cap.isOpened()):
@@ -118,7 +132,9 @@ while(cap.isOpened()):
 	print "frame " + str(counter)
 	
 	if counter == 0:
-		findStartingPoint(cap,100)
+		# start, initial = findStartingPoint(cap,100)
+# 		cv2.imwrite("/Users/lukereding/Desktop/background.jpg",initial)
+# 		print start
 		counter += 1
 		# re-start the video capture
 		cap = cv2.VideoCapture(args["inputVideo"])
@@ -127,19 +143,17 @@ while(cap.isOpened()):
 		# get the next frame
 		ret,frame = cap.read()
 		
-		#blur it
-		blurred = cv2.blur(frame,(7,7))
-		
-		# convert to greyscale
-		grey = cv2.cvtColor(blurred, cv2.COLOR_BGR2GRAY)
+		#blur it and concert to greyscale
+		greyed = grey(frame)
 		
 		# do the background subtraction
-		difference = cv2.subtract(initial,grey)
+		difference = cv2.subtract(initial,greyed)
 		
 		# mask; make the image binary
-		masked = cv2.inRange(difference,lower,upper)
+		masked = cv2.inRange(difference,10,255)
 		# invert the mask
 		maskedInvert = cv2.bitwise_not(masked)
+		cv2.imwrite("/Users/lukereding/Desktop/mask.jpg",maskedInvert)
 		
 		# find the centroid of the largest blob
 		center = returnLargeContour(maskedInvert)
@@ -154,6 +168,7 @@ while(cap.isOpened()):
 		
 		cv2.imshow('image',frame)
 		cv2.imshow('thresh',masked)
+		cv2.imshow('difference',difference)
 		
 		k = cv2.waitKey(1)
 		if k == 27:
