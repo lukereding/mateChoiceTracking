@@ -19,7 +19,7 @@ things you might need to change:
 -- the minimum contour size
 -- the contour aspect ratio
 
-The script assumes your video are of size: ________(fill this in!) _______
+The script assumes your video are of size 1280x720
 
 '''
 
