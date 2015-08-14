@@ -2,7 +2,7 @@
 import numpy as np
 import cv2, csv, os, re
 import argparse
-
+import warnings
 
 
 '''
@@ -12,7 +12,7 @@ it uses a subtraction algorithm to identify the fish, and refreshes the 'backgro
 
 usage example: python differenceImageGravel.py -i /Users/lukereding/Desktop/video.mp4
 
-the results will be written to a .csv file in the same place as the video
+the results will be written to a .csv file in the same directory that you run the script from
 
 things you might need to change:
 -- the mask bounds 
@@ -20,11 +20,10 @@ things you might need to change:
 -- the contour aspect ratio
 
 The script assumes your video are of size 1280x720
-
 '''
 
-## TO DO: # different mask
-print "differenceImageGravel.py"
+print "\n\ndifferenceImageGravel.py\n"
+
 # initialize some constants, lists, csv writer
 # construct the argument parse and parse the arguments
 ap = argparse.ArgumentParser()
@@ -45,7 +44,15 @@ myfile = open(name,'wb')
 csv_writer = csv.writer(myfile, quoting=csv.QUOTE_NONE)
 csv_writer.writerow(("x","y","frame"))
 
-# declare some functions:
+# test to make sure the video dimensions are the right size
+_,test = cap.read()
+if test.shape[0] != 720:
+	warn("note that this script is meant for videos that are 1280x720 pixels. It looks like your video isn't. You can either re-scale using ffmpeg or alter this code (espeically the masking step)")
+
+
+######################
+# declare some functions:####
+#####################################
 
 # converts a frame to HSV, blurs it, masks it to only get the tank by itself
 def convertToHSV(frame):
@@ -127,16 +134,46 @@ def returnLargeContour(frame):
 				csv_writer.writerow(("NA","NA",counter))
 				return()
 
+# might be nice to try to get an image of the background without the fish
+# computes an 'average' photo of the first numFrames frames from the video
+# change lines 176 and 175 below to try it out
+def getBackgroundImage(vid,numFrames):
+	
+	print "initializing background detection\n"
+	
+	# set a counter
+	i = 0
+	_,frame = vid.read()
+	# initialize an empty array the same size of the pic to update
+	update = np.float32(frame)
+	
+	# loop through the first numFrames frames to get the background image
+	while i < numFrames:
+		# grab a frame
+		_,frame = vid.read()
+		# main function
+		cv2.accumulateWeighted(frame,update,0.01)
+		final = cv2.convertScaleAbs(update)
+		# increment the counter
+		i += 1
+		
+		# print something every 100 frames so the user knows the gears are grinding
+		if i%100 == 0:
+			print "detecting background -- on frame " + str(i) + " of " + str(numFrames)
+	return final
 
-# similar to the above function, but restricts possibile contours to the location of the last contour
-# not used
-def returnCentroid(frame, lastPosition):
-	pass
+##############
+## end function declarations ####
+###################################################
 
 
 # grab the first frame
 ret,frame = cap.read()
 hsv_initial = convertToHSV(frame)
+
+# could also try:
+# background = getBackgroundImage(cap,500)
+# background = convertToHSV(background)
 
 
 # the main loop
@@ -159,7 +196,7 @@ while(cap.isOpened()):
 		
 		# find the centroid of the largest blob
 		center = returnLargeContour(maskedInvert)
-		print "Center: " + str(center)
+		print "Center: " + str(center) + "\n"
 		# draw the centroids on the image
 		if not not center:
 			cv2.circle(frame,center,6,[0,0,255],-1)
@@ -176,7 +213,7 @@ while(cap.isOpened()):
 		
 		# if the camera 'warms up' at the beginning or the lights from the screen light up at the beginning, changing the light environment of the tank,
 		# uncommenting the following lines can help
-		# the idea here is to re-set the 'initial' image every 100 frames in case there are changes with the light or top of the water reflections
+		# the idea here is to re-set the 'initial' image every 150 frames in case there are changes with the light or top of the water reflections
 		if counter % 150 ==0:
 			hsv_initial = hsv
 		
