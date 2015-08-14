@@ -41,4 +41,6 @@ pwd #/Users/lukereding/Desktop/controlExperimentsAnimationsJulyAugust/coding
 find "/Users/lukereding/Desktop/controlExperimentsAnimationsJulyAugust/largeMaleVsBackgroundVideosSpliced" | grep "_.*[12].mp4" > listOfVideos
 
 # note that mateChoiceTracking was cloned from github
-cat listOfVideos | sed 's,^\(.*\),python /Users/lukereding/Documents/mateChoiceTracking/differenceImageGravel.py -i \1,' > list
+cat listOfVideos | sed 's,^\(.*\),python /Users/lukereding/Documents/mateChoiceTracking/differenceImageGravel.py -i \1,' > track
+chmod +x track
+caffeinate -i /Users/lukereding/Desktop/controlExperimentsAnimationsJulyAugust/coding/track
