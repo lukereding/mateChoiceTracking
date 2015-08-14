@@ -39,7 +39,8 @@ cap = cv2.VideoCapture(args["inputVideo"])
 # output to csv file where the results will be written
 name = re.split('[/.]', args["inputVideo"], flags=re.IGNORECASE)[-2]
 name = name + ".csv"
-print(name)
+print "name of csv file: " + str(name)
+
 myfile = open(name,'wb')
 csv_writer = csv.writer(myfile, quoting=csv.QUOTE_NONE)
 csv_writer.writerow(("x","y","frame"))
@@ -103,7 +104,7 @@ def returnLargeContour(frame):
 	
 	# find all contours in the frame
 	contours = cv2.findContours(frame,cv2.RETR_TREE,cv2.CHAIN_APPROX_SIMPLE)[0]
-	print "number of contours: " + str(len(contours))
+	print "number of contours: " + str(len(contours)) + "\n"
 	
 	for z in contours:
 		# calculate some things
@@ -117,16 +118,18 @@ def returnLargeContour(frame):
 			print "area: " + str(area) + "; aspect_ratio: " + str(aspect_ratio)
 
 	largestCon = sorted(potential_centroids, key = cv2.contourArea, reverse = True)[:1]
+	print str(len(largestCon)) + " largest contours"
 
 	if len(potential_centroids) == 0:
 		csv_writer.writerow(("NA","NA",counter))
 		return()
 	else:
-		m = cv2.moments(largestCon)
-		centroid_x = int(m['m10']/m['m00'])
-		centroid_y = int(m['m01']/m['m00'])
-		csv_writer.writerow((centroid_x,centroid_y,counter))
-		return((centroid_x,centroid_y))
+		for j in largestCon:	
+			m = cv2.moments(j)		
+			centroid_x = int(m['m10']/m['m00'])
+			centroid_y = int(m['m01']/m['m00'])
+			csv_writer.writerow((centroid_x,centroid_y,counter))
+			return((centroid_x,centroid_y))
 
 # might be nice to try to get an image of the background without the fish
 # computes an 'average' photo of the first numFrames frames from the video
