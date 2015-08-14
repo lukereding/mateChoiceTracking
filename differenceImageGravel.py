@@ -176,7 +176,7 @@ hsv_initial = convertToHSV(frame)
 # the main loop
 while(cap.isOpened()):
 
-	print "frame " + str(counter)
+	print "frame " + str(counter) + "\n\n"
 	
 	if counter == 0:
 		findStartingPoint(cap,100)
