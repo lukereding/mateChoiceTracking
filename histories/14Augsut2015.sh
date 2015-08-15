@@ -44,3 +44,24 @@ find "/Users/lukereding/Desktop/controlExperimentsAnimationsJulyAugust/largeMale
 cat listOfVideos | sed 's,^\(.*\),python /Users/lukereding/Documents/mateChoiceTracking/differenceImageGravel.py -i \1,' > track
 chmod +x track
 caffeinate -i /Users/lukereding/Desktop/controlExperimentsAnimationsJulyAugust/coding/track
+
+
+15 August
+# when finished:
+ls | grep .csv | wc -l # 96. good.
+
+######## scototaxis videos
+# as above, convert to same codec just to make sure every video is similar
+find "/Volumes/LPRLABBKP/scototaxis" | grep ".mp4" | wc -l # 26.
+
+# note that there are two videos for 'amanda' that need to be concatenated
+printf "file 'Amanda_Scototaxis.mp4'\nfile 'Amanda_Scototaxis_2.mp4'" > concatAmanda
+ffmpeg -f concat -i concatAmanda -c copy Amanda_ScototaxisConcat.mp4
+
+find "/Volumes/LPRLABBKP/scototaxis" | grep ".mp4" | wc -l  # 24. now it looks good
+find "/Volumes/LPRLABBKP/scototaxis" | grep ".mp4" > scotolist
+
+cat scotolist | sed 's,^\(.*\)\(/[A-Za-z].*_[A-Za-z].*\).mp4,ffmpeg -i \1\2.mp4 -vcodec libx264 -y /Users/lukereding/Desktop/controlExperimentsAnimationsJulyAugust/scototaxisForAnalysis\2.mp4,' > remakeScotoVids
+head -1 remakeScotoVids # looks good
+chmod +x remakeScotoVids
+./remakeScotoVids
