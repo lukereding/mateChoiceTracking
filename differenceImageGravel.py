@@ -48,7 +48,7 @@ csv_writer.writerow(("x","y","frame"))
 # test to make sure the video dimensions are the right size
 _,test = cap.read()
 if test.shape[0] != 720:
-	warn("note that this script is meant for videos that are 1280x720 pixels. It looks like your video isn't. You can either re-scale using ffmpeg or alter this code (espeically the masking step)")
+	print "*************\nnote that this script is meant for videos that are 1280x720 pixels. It looks like your video isn't. You can either re-scale using ffmpeg or alter this code (espeically the masking step)\n********"
 
 
 ######################

@@ -46,7 +46,7 @@ chmod +x track
 caffeinate -i /Users/lukereding/Desktop/controlExperimentsAnimationsJulyAugust/coding/track
 
 
-15 August
+## 15 August
 # when finished:
 ls | grep .csv | wc -l # 96. good.
 
@@ -61,7 +61,14 @@ ffmpeg -f concat -i concatAmanda -c copy Amanda_ScototaxisConcat.mp4
 find "/Volumes/LPRLABBKP/scototaxis" | grep ".mp4" | wc -l  # 24. now it looks good
 find "/Volumes/LPRLABBKP/scototaxis" | grep ".mp4" > scotolist
 
-cat scotolist | sed 's,^\(.*\)\(/[A-Za-z].*_[A-Za-z].*\).mp4,ffmpeg -i \1\2.mp4 -vcodec libx264 -y /Users/lukereding/Desktop/controlExperimentsAnimationsJulyAugust/scototaxisForAnalysis\2.mp4,' > remakeScotoVids
+# here we change the scale of the video so that each video is 1280x720
+cat scotolist | sed 's,^\(.*\)\(/[A-Za-z].*_[A-Za-z].*\).mp4,ffmpeg -i \1\2.mp4 -vcodec libx264 -vf scale=1280:720 -y /Users/lukereding/Desktop/controlExperimentsAnimationsJulyAugust/scototaxisForAnalysis\2.mp4,' > remakeScotoVids
 head -1 remakeScotoVids # looks good
 chmod +x remakeScotoVids
 ./remakeScotoVids
+
+# now to run the scototaxis tracking script on the videos in 'scototaxisForAnalysis'
+find "/Users/lukereding/Desktop/controlExperimentsAnimationsJulyAugust/scototaxisForAnalysis" | grep "_.*.mp4" > listOfVideosForScoto
+cat listOfVideosForScoto | sed 's,^\(.*\),python /Users/lukereding/Documents/mateChoiceTracking/scototaxisTracking.py -i \1,' > trackScoto
+chmod +x trackScoto
+caffeinate -i /Users/lukereding/Desktop/controlExperimentsAnimationsJulyAugust/coding/trackScoto

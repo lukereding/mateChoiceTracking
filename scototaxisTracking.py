@@ -2,7 +2,6 @@
 import numpy as np
 import cv2, csv, os, re
 import argparse
-import warnings
 
 '''
 15 August 2015
@@ -19,7 +18,6 @@ things you might need to change:
 -- the contour aspect ratio
 
 The script assumes your videos are 1280x720
-if not, use 
 '''
 
 #######################
@@ -126,12 +124,13 @@ myfile = open(name,'wb')
 csv_writer = csv.writer(myfile, quoting=csv.QUOTE_NONE)
 csv_writer.writerow(("x","y","frame"))
 
+
 # make sure your videos are the right size
 # if not, issue a warning
 # (in the future, use os.system() to call ffmpeg or add variable that will rescale each photo in the main loop)
 _,frame=cap.read()
 if frame.shape[0] != 720:
-	warn("this script is meant for videos that are 1280x720. It appears this video is not. Note that this will probably cause problems, espeically when masking.")
+	print("*************\nthis script is meant for videos that are 1280x720. It appears this video is not. Note that this will probably cause problems, espeically when masking.\n***********\n")
 
 
 ## get the background image
