@@ -91,11 +91,12 @@ def returnLargeContour(frame):
 	
 	# if the list is not empty, return the centroid of largestCon and print the centroid to the screen
 	else:
-		m = cv2.moments(largestCon)		
-		centroid_x = int(m['m10']/m['m00'])
-		centroid_y = int(m['m01']/m['m00'])
-		csv_writer.writerow((centroid_x,centroid_y,counter))
-		return((centroid_x,centroid_y))
+		for j in largestCon:	
+			m = cv2.moments(j)		
+			centroid_x = int(m['m10']/m['m00'])
+			centroid_y = int(m['m01']/m['m00'])
+			csv_writer.writerow((centroid_x,centroid_y,counter))
+			return((centroid_x,centroid_y))
 
 ###########################
 ### end function declarations #######
