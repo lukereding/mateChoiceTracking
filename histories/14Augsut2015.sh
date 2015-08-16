@@ -62,7 +62,8 @@ find "/Volumes/LPRLABBKP/scototaxis" | grep ".mp4" | wc -l  # 24. now it looks g
 find "/Volumes/LPRLABBKP/scototaxis" | grep ".mp4" > scotolist
 
 # here we change the scale of the video so that each video is 1280x720
-cat scotolist | sed 's,^\(.*\)\(/[A-Za-z].*_[A-Za-z].*\).mp4,ffmpeg -i \1\2.mp4 -vcodec libx264 -vf scale=1280:720 -y /Users/lukereding/Desktop/controlExperimentsAnimationsJulyAugust/scototaxisForAnalysis\2.mp4,' > remakeScotoVids
+# we also need to clip each video so that's it's exactly 15 minutes (not 15:02 or 15:05)
+cat scotolist | sed 's,^\(.*\)\(/[A-Za-z].*_[A-Za-z].*\).mp4,ffmpeg -ss 0 -i \1\2.mp4 -t 900 -vcodec libx264 -vf scale=1280:720 -y /Users/lukereding/Desktop/controlExperimentsAnimationsJulyAugust/scototaxisForAnalysis\2.mp4,' > remakeScotoVids
 head -1 remakeScotoVids # looks good
 chmod +x remakeScotoVids
 ./remakeScotoVids

@@ -75,7 +75,7 @@ def returnLargeContour(frame):
 		aspect_ratio = float(w)/h
 		
 		#the main filtering statement
-		if area > 50 and area < 1000 and aspect_ratio <= 5 and aspect_ratio >= 0.20:
+		if area > 40 and area < 1000 and aspect_ratio <= 5 and aspect_ratio >= 0.20:
 			potential_centroids.append(z)
 			print "potential centroids: \n"
 			print "area: " + str(area) + "; aspect ratio: " + str(aspect_ratio)
