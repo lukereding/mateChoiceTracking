@@ -5,7 +5,7 @@
 mkdir coding
 cd coding
 
-# make a list of the videos for large vs bkg
+##### make a list of the videos for large vs bkg
 find "/Volumes/LPRLABBKP/largeMaleVsBackground" | grep ".mp4" > listOfVideos
 cat listOfVideos # looks right
 
@@ -73,3 +73,70 @@ find "/Users/lukereding/Desktop/controlExperimentsAnimationsJulyAugust/scototaxi
 cat listOfVideosForScoto | sed 's,^\(.*\),python /Users/lukereding/Documents/mateChoiceTracking/scototaxisTracking.py -i \1,' > trackScoto
 chmod +x trackScoto
 caffeinate -i /Users/lukereding/Desktop/controlExperimentsAnimationsJulyAugust/coding/trackScoto
+
+# do some basic checks:
+for filename in *is.csv ; do echo $filename; wc -l $filename; done
+for filename in *mateChoice1.csv ; do echo $filename; wc -l $filename; done
+
+
+# 17 August
+##### make a list of the videos for large vs small male
+find "/Volumes/LPRLABBKP/largeMaleVsSmallMale" | grep ".mp4" > listOfLargeVsSmallVideos
+cat listOfLargeVsSmallVideos # looks right
+
+mkdir largeMaleVsSmallMaleVideosSpliced
+cd largeMaleVsSmallMaleVideosSpliced
+pwd # /Users/lukereding/Desktop/controlExperimentsAnimationsJulyAugust/largeMaleVsSmallMale
+cd ../largeVsSmallMale
+
+# make sure all the videos are of the same size:
+for filename in *.mp4; do echo filename: $filename; mplayer -really-quiet -ao null -vo null -identify -frames 0 $filename | grep -e ID_VIDEO_WID -e ID_VIDEO_HEI; done
+# or
+for filename in *.mp4; do echo filename: $filename; ffmpeg -i $filename 2>&1 | grep Stream | grep -Eo ', [0-9]+x[0-9]+'; done
+# all videos are the right resolution
+
+## make sure all the videos have the same codec, etc
+# do a sed replacement to insert the ffmpeg command
+cat listOfLargeVsSmallVideos | sed 's,^\(.*\)\(/[A-Za-z].*_[A-Za-z].*\).mp4,ffmpeg -i \1\2.mp4 -vcodec libx264 -y /Users/lukereding/Desktop/controlExperimentsAnimationsJulyAugust/largeMaleVsSmallMaleVideosSpliced\2.mp4,' > remakeLargeVsSmallVids
+head -1 remakeLargeVsSmallVids  # looks good
+
+# now for splicing each video into four five minute videos
+echo "find "/Users/lukereding/Desktop/controlExperimentsAnimationsJulyAugust/largeMaleVsSmallMaleVideosSpliced"  | grep ".mp4" | sed 's,\(/[A-Za-z].*_.*\).mp4,ffmpeg -ss 300 -i \1.mp4 -t 300 -vcodec libx264 \1_mateChoice1.mp4,' > mateChoice1" >> remakeLargeVsSmallVids
+echo "find "/Users/lukereding/Desktop/controlExperimentsAnimationsJulyAugust/largeMaleVsSmallMaleVideosSpliced"  | grep ".mp4" | sed 's,\(/[A-Za-z].*_.*\).mp4,ffmpeg -ss 900 -i \1.mp4 -t 300 -vcodec libx264 \1_mateChoice2.mp4,' > mateChoice2" >> remakeLargeVsSmallVids
+echo "find "/Users/lukereding/Desktop/controlExperimentsAnimationsJulyAugust/largeMaleVsSmallMaleVideosSpliced"  | grep ".mp4" | sed 's,\(/[A-Za-z].*_.*\).mp4,ffmpeg -ss 0 -i \1.mp4 -t 300 -vcodec libx264 \1_backgrounds1.mp4,' > backgrounds1" >> remakeLargeVsSmallVids
+echo "find "/Users/lukereding/Desktop/controlExperimentsAnimationsJulyAugust/largeMaleVsSmallMaleVideosSpliced"  | grep ".mp4" | sed 's,\(/[A-Za-z].*_.*\).mp4,ffmpeg -ss 600 -i \1.mp4 -t 300 -vcodec libx264 \1_backgrounds2.mp4,' > backgrounds2" >> remakeLargeVsSmallVids
+echo "cat mateChoice1 mateChoice2 backgrounds1 backgrounds2 > spliceLargeVsSmall" >> remakeLargeVsSmallVids
+echo "chmod +x spliceLargeVsSmall" >> remakeLargeVsSmallVids
+echo "./spliceLargeVsSmall" >> remakeLargeVsSmallVids
+
+# do all the commands at once
+chmod +x remakeLargeVsSmallVids
+./remakeLargeVsSmallVids
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
