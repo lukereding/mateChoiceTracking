@@ -82,7 +82,7 @@ def findStartingPoint(video,numberOfFrames):
 		count += 1
 		if count == 1:
 			print "initializing"
-		print " " * (20-(count%20)) + "." * (count%20) + "." * (count%20)
+		print " " * (20-(count%20)) + "." * (count%20) + "." +  "." * (count%20)
 		
 	# now we have masked HSV photos from the beginning, middle, and end of the initialization period
 	# now we have to do some funky subtraction to get rid of the signal that results from the screen being turn on
@@ -113,7 +113,7 @@ def returnLargeContour(frame):
 		aspect_ratio = float(w)/h
 		print area, aspect_ratio
 		#the main filtering statement
-		if area > 150 and area < 1600 and aspect_ratio <= 3.5 and aspect_ratio >= 0.3:
+		if area > 150 and area < 2000 and aspect_ratio <= 3.5 and aspect_ratio >= 0.3:
 			potential_centroids.append(z)
 			print "area: " + str(area) + "; aspect_ratio: " + str(aspect_ratio)
 
@@ -203,6 +203,7 @@ while(cap.isOpened()):
 		
 		cv2.imshow('image',frame)
 		cv2.imshow('thresh',masked)
+		cv2.imshow('diff',difference)
 		
 		k = cv2.waitKey(1)
 		if k == 27:
