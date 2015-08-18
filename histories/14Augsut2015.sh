@@ -112,11 +112,19 @@ echo "./spliceLargeVsSmall" >> remakeLargeVsSmallVids
 # do all the commands at once
 chmod +x remakeLargeVsSmallVids
 ./remakeLargeVsSmallVids
+## this will splice all the videos you need
 
 
+# now to run tracking on all these videos:
+find "/Users/lukereding/Desktop/controlExperimentsAnimationsJulyAugust/largeMaleVsSmallMaleVideosSpliced" | grep "_.*[12].mp4" > listOfVideosLargeVsSmall
+cat listOfVideosLargeVsSmall | sed 's,^\(.*\),python /Users/lukereding/Documents/mateChoiceTracking/differenceImageGravel.py -i \1,' > trackLargeVsSmall
+chmod +x trackLargeVsSmall
+./trackLargeVsSmall
 
 
-
+# all this should take awhile; should run overnight
+# when it's all done:
+ls -la | grep '.csv' | wc -l # 216. that's 9 * 24; checks out
 
 
 
