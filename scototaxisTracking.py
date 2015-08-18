@@ -5,6 +5,7 @@ import argparse
 
 '''
 15 August 2015
+# last modified 18 August 2015
 
 this function calculates that percent of time a fish spends on the white side of a black/white tank
 it uses a subtraction algorithm to identify the fish
@@ -75,7 +76,7 @@ def returnLargeContour(frame):
 		aspect_ratio = float(w)/h
 		
 		#the main filtering statement
-		if area > 40 and area < 1000 and aspect_ratio <= 5 and aspect_ratio >= 0.20:
+		if area > 90 and area < 1000 and aspect_ratio <= 5 and aspect_ratio >= 0.20:
 			potential_centroids.append(z)
 			print "potential centroids: \n"
 			print "area: " + str(area) + "; aspect ratio: " + str(aspect_ratio)
@@ -137,8 +138,8 @@ if frame.shape[0] != 720:
 ## get the background image
 # fancy way:
 # get the background image and convert to HSV
-# background = getBackgroundImage(cap,500)
-# background = convertToHSV(background)
+#background = getBackgroundImage(cap,1000)
+#background = convertToHSV(background)
 
 # simple way:
 # this is really all we need since we're using cv2.subtract and not cv2.absdiff in the while loop below
