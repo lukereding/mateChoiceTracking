@@ -93,11 +93,11 @@ cd ../largeVsSmallMale
 for filename in *.mp4; do echo filename: $filename; mplayer -really-quiet -ao null -vo null -identify -frames 0 $filename | grep -e ID_VIDEO_WID -e ID_VIDEO_HEI; done
 # or
 for filename in *.mp4; do echo filename: $filename; ffmpeg -i $filename 2>&1 | grep Stream | grep -Eo ', [0-9]+x[0-9]+'; done
-# all videos are the right resolution
+# ALMOST all videos are the right resolution
 
 ## make sure all the videos have the same codec, etc
 # do a sed replacement to insert the ffmpeg command
-cat listOfLargeVsSmallVideos | sed 's,^\(.*\)\(/[A-Za-z].*_[A-Za-z].*\).mp4,ffmpeg -i \1\2.mp4 -vcodec libx264 -y /Users/lukereding/Desktop/controlExperimentsAnimationsJulyAugust/largeMaleVsSmallMaleVideosSpliced\2.mp4,' > remakeLargeVsSmallVids
+cat listOfLargeVsSmallVideos | sed 's,^\(.*\)\(/[A-Za-z].*_[A-Za-z].*\).mp4,ffmpeg -i \1\2.mp4 -vcodec libx264 -vf scale=1280:720 -y /Users/lukereding/Desktop/controlExperimentsAnimationsJulyAugust/largeMaleVsSmallMaleVideosSpliced\2.mp4,' > remakeLargeVsSmallVids
 head -1 remakeLargeVsSmallVids  # looks good
 
 # now for splicing each video into four five minute videos
