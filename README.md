@@ -10,7 +10,7 @@ The scototaxis tracking script is very similar to the general tracking script bu
 * Cut video into different parts corresponding to different parts of the trial. I've been using the instructions in **unixCommands.txt** for this. It batch processes a bunch of **ffmpeg** commands.
 * Analyze the videos using **differenceImageGravel.py**
 
-## In development
+## In development:
 **realTimeTracker.py** has a few aims:
 * track fish in mate choice tank in real time
 * save videos from each trial
