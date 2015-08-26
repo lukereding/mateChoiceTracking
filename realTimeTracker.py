@@ -12,6 +12,7 @@ it will automatically start after 10 seconds
 
 I've something goofy in that I've sort of artificially lowered the resolution of the videos to maintain compatibility with previous code using resize()
 this could be changed in future versions of this code 
+cap.set(3,720) does not work
 
 this here is a working copy of a python script I hope to use to accomplish the following:
 -- track fish in mate choice tank in real time
@@ -72,17 +73,18 @@ def drawRectangle(event,x,y,flags,param):
         print top_bound, left_bound, right_bound, lower_bound
 
 # converts a frame to HSV, blurs it, masks it to only get the tank by itself
+## TO DO: get rid of tank bounds as global variables, include as arguments to this function
 def convertToHSV(frame):
 	# blur image to make color uniform
 	blurred = cv2.blur(frame,(7,7))
 	# conver to hsv
 	hsv = cv2.cvtColor(blurred, cv2.COLOR_BGR2HSV)
 	# apply mask to get rid of stuff outside the tank
-	
-	### TO DO: change these mask bounds according the circle drawn
-	mask = np.zeros((720, 1280, 3),np.uint8)
-	mask[150:600,150:1170] = hsv[150:600,150:1170]
-	return mask
+	mask = np.zeros((camHeight, camWidth, 3),np.uint8)
+	print "mask shape: " + str(mask.shape[:2])
+	# use rectangle bounds for masking
+	mask[top_bound:lower_bound,left_bound:right_bound] = hsv[top_bound:lower_bound,left_bound:right_bound]
+	return hsv
 
 	
 # returns centroid from largest contour from a binary image
@@ -161,18 +163,14 @@ try:
 except:
 	pass
 
-# set up the video capture to the video that was the argument to the script
+# set up the video capture to the video that was the argument to the script, get feed dimensions
 cap = cv2.VideoCapture(captureNumber)
-
-# set the right resolution
-cap.set(3,1280)
-cap.set(4,720)
-
-print "camera feed dimensions: " + str(cap.get(3)) + " x " + str(cap.get(4))
+global camWidth, camHeight # for masking
+camWidth, camHeight = cap.get(3), cap.get(4)
+print "camera feed dimensions: " + str(camWidth) + " x " + str(camHeight)
 
 # grab the first frame
 ret,frame = cap.read()
-hsv_initial = convertToHSV(frame)
 
 # loop to have the user draw the rectangle
 while(True):
@@ -183,6 +181,9 @@ while(True):
 	if k == 27:
 		cv2.destroyAllWindows()
 		break
+
+# need to do this step after the drawing the rectangle so that we know the bounds for masking in the call to convertToHSV
+hsv_initial = convertToHSV(frame)
 
 # could also try:
 # background = getBackgroundImage(cap,500)
@@ -216,6 +217,7 @@ while(cap.isOpened()):
 	beginningOfLoop = time.time()
 	
 	ret,frame = cap.read()
+	print "frame size: " + str(frame.shape[:2])
 	hsv = convertToHSV(frame)
 	difference = cv2.subtract(hsv_initial,hsv)
 	masked = cv2.inRange(difference,lower,upper)
