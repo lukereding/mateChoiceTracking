@@ -10,10 +10,6 @@ started 25 August 2015
 start this script 10 seconds before you actually want it to start to allow time for inializing
 it will automatically start after 10 seconds
 
-I've something goofy in that I've sort of artificially lowered the resolution of the videos to maintain compatibility with previous code using resize()
-this could be changed in future versions of this code 
-cap.set(3,720) does not work
-
 important: the long side of the tank must be perpendicular to the camera view
 
 this here is a working copy of a python script I hope to use to accomplish the following:
@@ -306,13 +302,14 @@ while(cap.isOpened()):
 	if k == 27:
 		break
 
-	# if the camera 'warms up' at the beginning or the lights from the screen light up at the beginning, changing the light environment of the tank,
-	# uncommenting the following lines can help
 	# the idea here is to re-set the 'initial' image every 150 frames in case there are changes with the light or top of the water reflections
 	if counter % 150 ==0:
 		hsv_initial = hsv
 
 	counter+=1
+###############
+##### end of main loop ###
+###################################
 
 # save list of association zones
 output = open(name+'.txt', 'wb')
@@ -324,6 +321,6 @@ output.close()
 
 printUsefulStuff(zone)
 
-print "\n\nCongrats. Lots of files saved.\n\tYour video file is saved at " + str(pathToVideo) + "\n\tYour csv file with tracking information is saved at " + os.getcwd() + "/" + name + ".csv"
+print "\n\nCongrats. Lots of files saved.\n\tYour video file is saved at " + str(pathToVideo) + "\n\tYour csv file with tracking coordinates is saved at " + os.getcwd() + "/" + name + ".csv"
 
 cv2.destroyAllWindows()
