@@ -14,6 +14,8 @@ I've something goofy in that I've sort of artificially lowered the resolution of
 this could be changed in future versions of this code 
 cap.set(3,720) does not work
 
+important: the long side of the tank must be perpendicular to the camera view
+
 this here is a working copy of a python script I hope to use to accomplish the following:
 -- track fish in mate choice tank in real time
 -- save videos from each experiment
@@ -22,7 +24,7 @@ this here is a working copy of a python script I hope to use to accomplish the f
 -- have the program output error messages / let the experimenter know if there were problems with the tracker 
 or if the fish needs to be re-tested
 
-
+example of useage: python realTimeTracker.py -i /Users/lukereding/Desktop/Bertha_Scototaxis.mp4 -n jill > jill
 '''
 
 
@@ -32,16 +34,16 @@ start_time = time.time()
 end_time = start_time + 10
 ap = argparse.ArgumentParser()
 ap.add_argument("-i", "--inputCamera", help = "integer that represents which usb input the camera is. typically 0 or 1")
-ap.add_argument("-n", "--name", help = "name of the female. e.g. Jill")
+ap.add_argument("-n", "--videoName", help = "name of the video to be saved")
 args = vars(ap.parse_args())
 lower = np.array([0,0,0])
 upper = np.array([255,255,20])
 counter = 0
 
 # output to csv file where the results will be written
-name = args["name"] + ".csv"
-print "name of csv file: " + str(name)
-myfile = open(name,'wb')
+name = args["videoName"]
+print "name of csv file: " + str(name) + ".csv"
+myfile = open(name+".csv",'wb')
 csv_writer = csv.writer(myfile, quoting=csv.QUOTE_NONE)
 csv_writer.writerow(("x","y","frame"))
 
@@ -50,11 +52,39 @@ drawing = False # true if mouse is pressed
 ix,iy = -1,-1
 
 # print python version
+print "python version:"
 print sys.version 
 
 ######################
 # declare some functions:####
 #####################################
+
+def printUsefulStuff(listOfSides):
+	# do some counting
+	left = listOfSides.count("left")
+	right = listOfSides.count("right")
+	neutral = listOfSides.count("neutral")
+	total = left + right + neutral
+	
+	# print association time stats to the screen
+	print "\n\n\nnumber frames left: " + str(left)
+	print "number frames right: " + str(right)
+	print "number frames neutral: " + str(neutral) + "\n"
+	
+	if left >= 0.75*total:
+		print "\n\n\tLEFT SIDE BIAS. RE-TEST FEMALE"
+	elif right >= 0.75*total:
+		print "\n\n\tRIGHT SIDE BIAS. RE-TEST FEMALE"
+	else:
+		print "\n\n\tno evidence of right or left side bias\n"
+
+# set up video writer to save the video
+def setupVideoWriter(width, height,videoName):
+	# Define the codec and create VideoWriter object
+	fourcc = cv2.cv.CV_FOURCC('m', 'p', '4', 'v')
+	videoName = os.getcwd() + '/' + videoName + ".avi"
+	out = cv2.VideoWriter(videoName,fourcc, 5.0, (int(width),int(height)))
+	return out, videoName
 
 # mouse callback function; draws the rectangle
 def drawRectangle(event,x,y,flags,param):
@@ -81,7 +111,6 @@ def convertToHSV(frame):
 	hsv = cv2.cvtColor(blurred, cv2.COLOR_BGR2HSV)
 	# apply mask to get rid of stuff outside the tank
 	mask = np.zeros((camHeight, camWidth, 3),np.uint8)
-	print "mask shape: " + str(mask.shape[:2])
 	# use rectangle bounds for masking
 	mask[top_bound:lower_bound,left_bound:right_bound] = hsv[top_bound:lower_bound,left_bound:right_bound]
 	return hsv
@@ -111,7 +140,7 @@ def returnLargeContour(frame):
 
 	if len(potential_centroids) == 0:
 		csv_writer.writerow(("NA","NA",counter))
-		return()
+		return(None)
 	else:
 		for j in largestCon:	
 			m = cv2.moments(j)		
@@ -189,7 +218,6 @@ hsv_initial = convertToHSV(frame)
 # background = getBackgroundImage(cap,500)
 # background = convertToHSV(background)
 
-
 # keep a list of coordinates of the fish.
 # the idea is, for the purposes of this code, if we can't ID the fish we assume it's stopped
 # the csv file we save will have NAs for these frames instead
@@ -197,13 +225,24 @@ hsv_initial = convertToHSV(frame)
 # it would be nice to have a python function at the end of this script that would do that for me, actually
 
 # initiating with the center of the tank in case tracker can't find fish initially
+# also set up left of 'left' 'right' or 'neutral' zone
 center1 =(right_bound-left_bound)/2
-center2 = (lower_bound-top_bound)/2
+center2 = (top_bound-lower_bound)/2
 coordinates = [(center1,center2)]
-print coordinates
+zone = []
+
+# set association zone bounds
+zoneSize = int((right_bound-left_bound) / 3)
+leftBound = left_bound + zoneSize
+rightBound = left_bound + (2*zoneSize)
+
+# set up video writer specifying size (MUST be same size as input) and name (command line argument)
+videoWriter, pathToVideo = setupVideoWriter(camWidth, camHeight,name)
 
 
-# the main loop
+###########################
+### the main loop######
+###################
 while(cap.isOpened()):
 
 	print "frame " + str(counter) + "\n\n"
@@ -217,7 +256,11 @@ while(cap.isOpened()):
 	beginningOfLoop = time.time()
 	
 	ret,frame = cap.read()
-	print "frame size: " + str(frame.shape[:2])
+	
+	# save the frame to the video
+	videoWriter.write(frame)
+	
+	# do image manipulations for tracking
 	hsv = convertToHSV(frame)
 	difference = cv2.subtract(hsv_initial,hsv)
 	masked = cv2.inRange(difference,lower,upper)
@@ -225,24 +268,35 @@ while(cap.isOpened()):
 
 	# find the centroid of the largest blob
 	center = returnLargeContour(maskedInvert)
-	
+		
 	# if the fish wasn't ID'ed by the tracker, assume it's stopped moving
 	if not center:
 		coordinates.append(coordinates[-1]) 
 	# otherwise add the coordinate to the growing list
 	else:
 		coordinates.append(center)
+
+	# find what association zone the fish is in:
+	if center == None:
+		pass
+	elif coordinates[-1][0] < leftBound:
+		zone.append("left")
+	elif coordinates[-1][0] > rightBound:
+		zone.append("right")
+	else:
+		zone.append("neutral")
+
 	
 	print "Center: " + str(center) + "\n"
 	# draw the centroids on the image
 	cv2.circle(frame,coordinates[-1],6,[0,0,255],-1)
-	# to save the frames:
-	#filename = "/Users/lukereding/Desktop/example/" + "{0:05d}".format(counter) + ".jpg"
-	#cv2.imwrite(filename,frame)
+	
+	if center != None:
+		cv2.putText(frame,str(zone[-1]),(leftBound,lower_bound), cv2.FONT_HERSHEY_PLAIN, 3.0,(0,0,0))
 
 	cv2.imshow('image',frame)
-	cv2.imshow('thresh',masked)
-	cv2.imshow('diff',difference)
+	#cv2.imshow('thresh',masked)
+	#cv2.imshow('diff',difference)
 	
 	# print how long this loop took
 	endOfLoop = time.time()
@@ -259,5 +313,17 @@ while(cap.isOpened()):
 		hsv_initial = hsv
 
 	counter+=1
+
+# save list of association zones
+output = open(name+'.txt', 'wb')
+for line in zone:
+	output.write("%s\n" % line)
+output.close()
+
+### after the program exits, print some useful stuff to the screen
+
+printUsefulStuff(zone)
+
+print "\n\nCongrats. Lots of files saved.\n\tYour video file is saved at " + str(pathToVideo) + "\n\tYour csv file with tracking information is saved at " + os.getcwd() + "/" + name + ".csv"
 
 cv2.destroyAllWindows()
