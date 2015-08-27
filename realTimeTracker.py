@@ -271,7 +271,9 @@ while(cap.isOpened()):
 	# otherwise add the coordinate to the growing list
 	else:
 		coordinates.append(center)
-
+	
+	print "coordinates: " + str(coordinates[-1])
+	
 	# find what association zone the fish is in:
 	if center == None:
 		pass
@@ -291,8 +293,8 @@ while(cap.isOpened()):
 		cv2.putText(frame,str(zone[-1]),(leftBound,lower_bound), cv2.FONT_HERSHEY_PLAIN, 3.0,(0,0,0))
 
 	cv2.imshow('image',frame)
-	#cv2.imshow('thresh',masked)
-	#cv2.imshow('diff',difference)
+	cv2.imshow('thresh',masked)
+	cv2.imshow('diff',difference)
 	
 	# print how long this loop took
 	endOfLoop = time.time()
