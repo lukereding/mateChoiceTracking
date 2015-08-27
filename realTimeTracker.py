@@ -56,7 +56,8 @@ print sys.version
 #####################################
 
 def printUsefulStuff(listOfSides):
-	# do some counting
+	
+	# count number of frames the fish spend in each part of the tank
 	left = listOfSides.count("left")
 	right = listOfSides.count("right")
 	neutral = listOfSides.count("neutral")
@@ -67,6 +68,7 @@ def printUsefulStuff(listOfSides):
 	print "number frames right: " + str(right)
 	print "number frames neutral: " + str(neutral) + "\n"
 	
+	# check for side bias and report results to the screen
 	if left >= 0.75*total:
 		print "\n\n\tLEFT SIDE BIAS. RE-TEST FEMALE"
 	elif right >= 0.75*total:
@@ -92,6 +94,7 @@ def drawRectangle(event,x,y,flags,param):
     elif event == cv2.EVENT_LBUTTONUP:
         drawing = False
         cv2.rectangle(frame,(ix,iy),(x,y),(0,0,255),5)
+        
         # globally define the boundaries of the tank
         global top_bound, left_bound, right_bound, lower_bound
         top_bound, left_bound, right_bound, lower_bound = iy, ix, x, y
@@ -109,7 +112,7 @@ def convertToHSV(frame):
 	mask = np.zeros((camHeight, camWidth, 3),np.uint8)
 	# use rectangle bounds for masking
 	mask[top_bound:lower_bound,left_bound:right_bound] = hsv[top_bound:lower_bound,left_bound:right_bound]
-	return hsv
+	return mask
 
 	
 # returns centroid from largest contour from a binary image
