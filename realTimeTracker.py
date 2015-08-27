@@ -19,19 +19,40 @@ this here is a working copy of a python script I hope to use to accomplish the f
 -- have the tracker record association time in real time
 -- have the program output error messages / let the experimenter know if there were problems with the tracker 
 or if the fish needs to be re-tested
+-- ensure constant framerate
 
-example of useage: python realTimeTracker.py -i /Users/lukereding/Desktop/Bertha_Scototaxis.mp4 -n jill > jill
+help menu:  python realTimeTracker.py --help
+
+arguments:
+--inputCamera: defaults to 0. typically 0 or 1
+--videoName: used to save files associated with the trial
+--lengthOfAcclimation: time in seconds between when you press Enter and when the program starts tracking. Should be >60
+
+example of useage: python realTimeTracker.py -i /Users/lukereding/Desktop/Bertha_Scototaxis.mp4 -n jill
 '''
 
 
 # initialize some constants, lists, csv writer
 # construct the argument parse and parse the arguments
-start_time = time.time()
-end_time = start_time + 10
 ap = argparse.ArgumentParser()
-ap.add_argument("-i", "--inputCamera", help = "integer that represents which usb input the camera is. typically 0 or 1")
-ap.add_argument("-n", "--videoName", help = "name of the video to be saved")
+ap.add_argument("-i", "--inputCamera", help = "integer that represents which usb input the camera is. typically 0 or 1. can also be the fill path to a video file",nargs='?',default=0,type=int)
+ap.add_argument("-n", "--videoName", help = "name of the video to be saved",required=True)
+ap.add_argument("-l", "--lengthOfAcclimation", help = "length of time (in seconds) between when you start the program and when it starts tracking. defaults to 600",nargs='?',default=600,type=int)
+args = ap.parse_args()
+
+print("\tinput camera: {}".format(args.inputCamera))
+print("\tname of trial: {}".format(args.videoName))
+print "\tlength of acclimation: {}".format(args.lengthOfAcclimation) + "\n\n"
+
 args = vars(ap.parse_args())
+
+acclimationLength = args["lengthOfAcclimation"]
+if acclimationLength < 60:
+	sys.exit("enter a longer acclimation time. The acclimation time needs to be long enough that a background image can be computed (~60 seconds)")
+
+start_time = time.time()
+end_time = start_time + acclimationLength
+
 lower = np.array([0,0,0])
 upper = np.array([255,255,20])
 counter = 0
@@ -48,7 +69,7 @@ drawing = False # true if mouse is pressed
 ix,iy = -1,-1
 
 # print python version
-print "python version:"
+print "python version:\n"
 print sys.version 
 
 ######################
@@ -169,6 +190,7 @@ def getBackgroundImage(vid,numFrames):
 	while i < numFrames:
 		# grab a frame
 		_,frame = vid.read()
+		
 		# main function
 		cv2.accumulateWeighted(frame,update,0.01)
 		final = cv2.convertScaleAbs(update)
@@ -215,11 +237,12 @@ while(True):
 		break
 
 # need to do this step after the drawing the rectangle so that we know the bounds for masking in the call to convertToHSV
-hsv_initial = convertToHSV(frame)
+#hsv_initial = convertToHSV(frame)
 
-# could also try:
-# background = getBackgroundImage(cap,500)
-# background = convertToHSV(background)
+# calculate background image of tank for 1500 frames
+background = getBackgroundImage(cap,1500)
+hsv_initial = convertToHSV(background)
+cv2.imwrite(name + "_background.jpg",background)
 
 # keep a list of coordinates of the fish.
 # the idea is, for the purposes of this code, if we can't ID the fish we assume it's stopped
@@ -250,10 +273,12 @@ while(cap.isOpened()):
 
 	print "frame " + str(counter) + "\n\n"
 	
+	# wait until the 10 minutes while the fish is acclimating is up
 	while(time.time() < end_time):
-		print "starting in " + str(round(end_time - time.time(),1)) + "seconds" 
-		# wait 0.1 seconds
-		time.sleep(0.1)
+		if round(end_time - time.time(),1) % 5 == 0:
+			print "starting in " + str(round(end_time - time.time(),1)) + "seconds" 
+			# wait 0.1 seconds
+		time.sleep(.1)
 	
 	# for timing
 	beginningOfLoop = time.time()
@@ -293,6 +318,7 @@ while(cap.isOpened()):
 
 	
 	print "Center: " + str(center) + "\n"
+	
 	# draw the centroids on the image
 	cv2.circle(frame,coordinates[-1],6,[0,0,255],-1)
 	
@@ -300,8 +326,8 @@ while(cap.isOpened()):
 		cv2.putText(frame,str(zone[-1]),(leftBound,lower_bound), cv2.FONT_HERSHEY_PLAIN, 3.0,(0,0,0))
 
 	cv2.imshow('image',frame)
-	cv2.imshow('thresh',masked)
-	cv2.imshow('diff',difference)
+	#cv2.imshow('thresh',masked)
+	#cv2.imshow('diff',difference)
 	
 	# print how long this loop took
 	endOfLoop = time.time()
@@ -312,12 +338,14 @@ while(cap.isOpened()):
 		break
 
 	# the idea here is to re-set the 'initial' image every 150 frames in case there are changes with the light or top of the water reflections
-	if counter % 150 ==0:
-		hsv_initial = hsv
+#	if counter % 150 ==0:
+#		hsv_initial = hsv
 
 	counter+=1
-###############
-##### end of main loop ###
+
+
+########################
+##### end of main loop #####
 ###################################
 
 # save list of association zones
@@ -331,5 +359,6 @@ output.close()
 printUsefulStuff(zone)
 
 print "\n\nCongrats. Lots of files saved.\n\tYour video file is saved at " + str(pathToVideo) + "\n\tYour csv file with tracking coordinates is saved at " + os.getcwd() + "/" + name + ".csv"
+print "\tYour list of tentative association zones occupied in each frame is saved at " + os.getcwd() + "/" + name + ".txt"
 
 cv2.destroyAllWindows()
