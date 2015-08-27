@@ -35,7 +35,7 @@ example of useage: python realTimeTracker.py -i /Users/lukereding/Desktop/Bertha
 # initialize some constants, lists, csv writer
 # construct the argument parse and parse the arguments
 ap = argparse.ArgumentParser()
-ap.add_argument("-i", "--inputCamera", help = "integer that represents which usb input the camera is. typically 0 or 1. can also be the fill path to a video file",nargs='?',default=0,type=int)
+ap.add_argument("-i", "--inputCamera", help = "integer that represents which usb input the camera is. typically 0 or 1. can also be the fill path to a video file",nargs='?',default=0)
 ap.add_argument("-n", "--videoName", help = "name of the video to be saved",required=True)
 ap.add_argument("-l", "--lengthOfAcclimation", help = "length of time (in seconds) between when you start the program and when it starts tracking. defaults to 600",nargs='?',default=600,type=int)
 args = ap.parse_args()
