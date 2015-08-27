@@ -6,8 +6,13 @@ import cv2, csv, os, re, sys, time, argparse, datetime
 '''
 started 25 August 2015
 
-start this script 10 seconds before you actually want it to start to allow time for inializing
-it will automatically start after 10 seconds
+typical useage:
+-- run this script at the beginning of a 10 minute acclimation period (this time can be changed with the -l parameter)
+-- outline the rectangle along the bounds of the tank
+-- wait for the camera to detect the background
+-- the program starts automatically and shuts off 20 minutes later. You can tweak this amount of time with the -t parameter
+-- a video file, list of association zones occupied, a csv file containing coordinates are all saved in the directory where you ran the script from
+-- association time stats are spit out at the end. the fish is tested for side bias in the 2nd and 4th quarters of the trial period
 
 assumes there are four 'parts' to your video of each length. this only affects some of the stats the program prints at the end
 
@@ -47,6 +52,7 @@ ap.add_argument("-i", "--inputCamera", help = "integer that represents which usb
 ap.add_argument("-n", "--videoName", help = "name of the video to be saved",required=True)
 ap.add_argument("-l", "--lengthOfAcclimation", help = "length of time (in seconds) between when you start the program and when it starts tracking. defaults to 600",nargs='?',default=600,type=int)
 ap.add_argument("-t", "--lengthOfTrial", help = "length of trial (in seconds). defaults to 1200",nargs='?',default=1200,type=int)
+ap.add_argument("-b", "--bias", help = "proportion of time a fish spends on either the right or lefthand side of the tank to be declared side bias. defaults to 0.75",nargs='?',default=0.75)
 
 args = ap.parse_args()
 
@@ -54,6 +60,7 @@ args = ap.parse_args()
 print("\n\n\tinput camera: {}".format(args.inputCamera))
 print("\tname of trial: {}".format(args.videoName))
 print("\tlength of trial excluding acclimation: {}".format(args.lengthOfTrial))
+print("\tbias: {}".format(args.bias))
 print "\tlength of acclimation: {}".format(args.lengthOfAcclimation) + "\n\n"
 args = vars(ap.parse_args())
 
@@ -62,6 +69,9 @@ acclimationLength = args["lengthOfAcclimation"]
 if acclimationLength < 40:
 	sys.exit("enter a longer acclimation time. The acclimation time needs to be long enough that a background image can be computed (~60 seconds)")
 lengthOfTrial = args["lengthOfTrial"]
+bias = args["bias"]
+if bias > 1 or bias < 0:
+	sys.exit("bias (-b) must be between 0 and 1")
 
 # calculate the time that the program should start the main loop
 start_time = time.time()
@@ -91,8 +101,6 @@ print sys.version
 #####################################
 
 def checkSideBias(left,right,neutral,bias):
-	if bias > 1.0:
-		print "BIAS SHOULD NOT BE GREATER THAN 1.0"
 	
 	total = left + right + neutral
 	if left >= bias*total:
@@ -102,7 +110,7 @@ def checkSideBias(left,right,neutral,bias):
 	else:
 		return("looks good")
 
-def printUsefulStuff(listOfSides,fps):
+def printUsefulStuff(listOfSides,fps,biasProp):
 	
 	# print realized fps for the trial
 	print "\n\n\n\nrealized fps: " + str(fps)
@@ -132,7 +140,7 @@ def printUsefulStuff(listOfSides,fps):
 	print "seconds left: " + str(leftPart1/fps)
 	print "seconds right: " + str(rightPart1/fps)
 	print "seconds neutral: " + str(neutralPart1/fps) + "\n"
-	print checkSideBias(leftPart1,rightPart1,neutralPart1,0.75)
+	print checkSideBias(leftPart1,rightPart1,neutralPart1,biasProp)
 	
 	# print association time stats to the screen for each part
 	print "\n\npart 2:\nframes " + str(int(len(listOfSides)*0.25)) + " - " + str(int(len(listOfSides)*0.5))
@@ -146,19 +154,19 @@ def printUsefulStuff(listOfSides,fps):
 	print "seconds left: " + str(leftPart3/fps)
 	print "seconds right: " + str(rightPart3/fps)
 	print "seconds neutral: " + str(neutralPart3/fps) + "\n"
-	print checkSideBias(leftPart3,rightPart3,neutralPart3,0.75)
+	print checkSideBias(leftPart3,rightPart3,neutralPart3,biasProp)
 	
 	# print association time stats to the screen for each part
 	print "\n\npart 4:\n" + str(int(len(listOfSides)*0.75)) + " - " + str(int(len(listOfSides)))
 	print "seconds left: " + str(leftPart4/fps)
 	print "seconds right: " + str(rightPart4/fps)
 	print "seconds neutral: " + str(neutralPart4/fps) + "\n"
-	print checkSideBias(leftPart4,rightPart4,neutralPart4,0.75)
+	print checkSideBias(leftPart4,rightPart4,neutralPart4,biasProp)
 	
 	## check for side bias in the two parts where stimuli were present:
 	print "\n\nchecking side bias for parts 2 and 4, where male stimuli were present:\n\n"
-	print "left: " + str((leftPart2+leftPart1)/fps) + "\nright: " + str((rightPart2+rightPart1)/fps) + "\nneutral: " + str((neutralPart2+neutralPart1)/fps)
-	bias = checkSideBias(leftPart2+leftPart4,rightPart4+rightPart2,neutralPart4+neutralPart2,0.75)
+	print "left: " + str((leftPart2+leftPart4)/fps) + "\nright: " + str((rightPart2+rightPart4)/fps) + "\nneutral: " + str((neutralPart2+neutralPart4)/fps)
+	bias = checkSideBias(leftPart2+leftPart4,rightPart4+rightPart2,neutralPart4+neutralPart2,biasProp)
 	print bias
 	if bias != "looks good":
 		print "\tFEMALE MUST BE RE-TESTED. SET ASIDE FEMALE AND RE-TEST AT A LATER DATE"
@@ -360,7 +368,7 @@ while(time.time() - startOfTrial < lengthOfTrial):
 	beginningOfLoop = time.time()
 	
 	ret,frame = cap.read()
-	
+	cv2.putText(frame,str(datetime.datetime.now().strftime("%D %H:%M:%S.%f")), (20,20),cv2.FONT_HERSHEY_PLAIN, 1.0,(255,255,255))
 	# save the frame to the video
 	videoWriter.write(frame)
 	
@@ -399,7 +407,6 @@ while(time.time() - startOfTrial < lengthOfTrial):
 	if center != None:
 		cv2.putText(frame,str(zone[-1]),(leftBound,lower_bound+50), cv2.FONT_HERSHEY_PLAIN, 3.0,(255,255,255))
 	cv2.putText(frame,str("frame " + str(counter)), (leftBound,lower_bound+150),cv2.FONT_HERSHEY_PLAIN, 3.0,(255,255,255))
-	cv2.putText(frame,str(datetime.datetime.now().strftime("%D %H:%M:%S.%f")), (20,20),cv2.FONT_HERSHEY_PLAIN, 1.0,(255,255,255))
 
 	cv2.imshow('image',frame)
 	#cv2.imshow('thresh',masked)
@@ -443,7 +450,7 @@ print "total time: " + str(endOfLoop-beginningOfTrial)
 realizedFPS = counter / (endOfLoop-beginningOfTrial)
 
 # calculate and print association time to the screen
-printUsefulStuff(zone, realizedFPS)
+printUsefulStuff(zone, realizedFPS,bias)
 
 print "\n\nCongrats. Lots of files saved.\n\n\tYour video file is saved at " + str(pathToVideo) + "\n\tYour csv file with tracking coordinates is saved at " + os.getcwd() + "/" + name + ".csv"
 print "\tYour list of tentative association zones occupied in each frame is saved at " + os.getcwd() + "/" + name + ".txt"
