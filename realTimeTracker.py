@@ -20,13 +20,15 @@ this here is a working copy of a python script I hope to use to accomplish the f
 -- have the program output error messages / let the experimenter know if there were problems with the tracker 
 or if the fish needs to be re-tested
 -- ensure constant framerate
+-- track progress for detecting background??
+-- incorporating all four parts of each trial
 
 help menu:  python realTimeTracker.py --help
 
 arguments:
 --inputCamera: defaults to 0. typically 0 or 1
---videoName: used to save files associated with the trial
---lengthOfAcclimation: time in seconds between when you press Enter and when the program starts tracking. Should be >60
+--videoName: used to save files associated with the trial. required
+--lengthOfAcclimation: time in seconds between when you press Enter and when the program starts tracking. Should be >60. defaults to 600
 
 example of useage: python realTimeTracker.py -i /Users/lukereding/Desktop/Bertha_Scototaxis.mp4 -n jill
 '''
@@ -40,7 +42,7 @@ ap.add_argument("-n", "--videoName", help = "name of the video to be saved",requ
 ap.add_argument("-l", "--lengthOfAcclimation", help = "length of time (in seconds) between when you start the program and when it starts tracking. defaults to 600",nargs='?',default=600,type=int)
 args = ap.parse_args()
 
-print("\tinput camera: {}".format(args.inputCamera))
+print("\n\n\tinput camera: {}".format(args.inputCamera))
 print("\tname of trial: {}".format(args.videoName))
 print "\tlength of acclimation: {}".format(args.lengthOfAcclimation) + "\n\n"
 
@@ -150,7 +152,7 @@ def returnLargeContour(frame,totalVideoPixels):
 		x,y,w,h = cv2.boundingRect(z)
 		aspect_ratio = float(w)/h
 		
-		# the main filtering statement:
+		##### the main filtering statement:
 		# the problem with use absolute values for the size cutoffs is that this will vary with the dimensions of the camera
 		# I originally found that including blobs within the range (150, 2000) worked well for videos that were 1280x780
 		# thus the fish took up ~0.016776% to ~0.21701% of the total available pixels (921,600)
@@ -178,7 +180,7 @@ def returnLargeContour(frame,totalVideoPixels):
 # change lines 176 and 175 below to try it out
 def getBackgroundImage(vid,numFrames):
 	
-	print "initializing background detection\n"
+	print "\n\n\n\ninitializing background detection\n"
 	
 	# set a counter
 	i = 0
@@ -206,9 +208,6 @@ def getBackgroundImage(vid,numFrames):
 ## end function declarations ####
 ###################################################
 
-# print input argument to the terminal
-print "input: " + str(args["inputCamera"])
-
 captureNumber = args["inputCamera"]
 # this is a string. If it can be converted to an integer, then convert it
 try:
@@ -221,7 +220,7 @@ except:
 cap = cv2.VideoCapture(captureNumber)
 global camWidth, camHeight # for masking
 camWidth, camHeight = cap.get(3), cap.get(4)
-print "camera feed dimensions: " + str(camWidth) + " x " + str(camHeight)
+print "\n\ncamera feed dimensions: " + str(camWidth) + " x " + str(camHeight)
 
 # grab the first frame
 ret,frame = cap.read()
@@ -270,17 +269,19 @@ videoWriter, pathToVideo = setupVideoWriter(camWidth, camHeight,name)
 ### the main loop######
 ###################
 while(cap.isOpened()):
-
+	
 	print "frame " + str(counter) + "\n\n"
 	
 	# wait until the 10 minutes while the fish is acclimating is up
 	while(time.time() < end_time):
 		if round(end_time - time.time(),1) % 5 == 0:
-			print "starting in " + str(round(end_time - time.time(),1)) + "seconds" 
+			print "starting in " + str(end_time - time.time()) + " seconds" 
 			# wait 0.1 seconds
 		time.sleep(.1)
 	
-	# for timing
+	
+	
+	# for timing, maintaining constant fps
 	beginningOfLoop = time.time()
 	
 	ret,frame = cap.read()
@@ -323,15 +324,21 @@ while(cap.isOpened()):
 	cv2.circle(frame,coordinates[-1],6,[0,0,255],-1)
 	
 	if center != None:
-		cv2.putText(frame,str(zone[-1]),(leftBound,lower_bound), cv2.FONT_HERSHEY_PLAIN, 3.0,(0,0,0))
+		cv2.putText(frame,str(zone[-1]),(leftBound,lower_bound+20), cv2.FONT_HERSHEY_PLAIN, 3.0,(255,255,255))
 
 	cv2.imshow('image',frame)
 	#cv2.imshow('thresh',masked)
 	#cv2.imshow('diff',difference)
 	
-	# print how long this loop took
+	# each loop should take 0.2 seconds to ensure a framerate of 5 fps
 	endOfLoop = time.time()
-	print "time of loop: " + str(round(endOfLoop-beginningOfLoop,4))
+	try:
+		print endOfLoop-beginningOfLoop
+		time.sleep(0.198-(endOfLoop-beginningOfLoop))
+	except:
+		pass
+	
+	print "time of loop: " + str(round(time.time()-beginningOfLoop,4))
 	
 	k = cv2.waitKey(1)
 	if k == 27:
