@@ -192,7 +192,7 @@ def getBackgroundImage(vid,numFrames):
 		_,frame = vid.read()
 		
 		# main function
-		cv2.accumulateWeighted(frame,update,0.01)
+		cv2.accumulateWeighted(frame,update,0.001)
 		final = cv2.convertScaleAbs(update)
 		# increment the counter
 		i += 1
