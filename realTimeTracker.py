@@ -113,7 +113,7 @@ def convertToHSV(frame):
 
 	
 # returns centroid from largest contour from a binary image
-def returnLargeContour(frame):
+def returnLargeContour(frame,totalVideoPixels):
 	potential_centroids = []
 	
 	# find all contours in the frame
@@ -125,9 +125,13 @@ def returnLargeContour(frame):
 		area = cv2.contourArea(z)
 		x,y,w,h = cv2.boundingRect(z)
 		aspect_ratio = float(w)/h
-		print area, aspect_ratio
-		#the main filtering statement
-		if area > 150 and area < 2000 and aspect_ratio <= 3.5 and aspect_ratio >= 0.3:
+		
+		# the main filtering statement:
+		# the problem with use absolute values for the size cutoffs is that this will vary with the dimensions of the camera
+		# I originally found that including blobs within the range (150, 2000) worked well for videos that were 1280x780
+		# thus the fish took up ~0.016776% to ~0.21701% of the total available pixels (921,600)
+		# based on that, I should be able to apply those percents to any video resolution and get good results 
+		if area > (totalVideoPixels*0.00016776) and area < (totalVideoPixels*0.0021701) and aspect_ratio <= 3.5 and aspect_ratio >= 0.3:
 			potential_centroids.append(z)
 			print "area: " + str(area) + "; aspect_ratio: " + str(aspect_ratio)
 
@@ -263,7 +267,7 @@ while(cap.isOpened()):
 	maskedInvert = cv2.bitwise_not(masked)
 
 	# find the centroid of the largest blob
-	center = returnLargeContour(maskedInvert)
+	center = returnLargeContour(maskedInvert, camWidth*camHeight)
 		
 	# if the fish wasn't ID'ed by the tracker, assume it's stopped moving
 	if not center:
