@@ -192,7 +192,7 @@ def drawRectangle(event,x,y,flags,param):
 		cv2.rectangle(frame,(ix,iy),(x,y),(0,0,255),5)
 		# globally define the boundaries of the tank
 		global top_bound, left_bound, right_bound, lower_bound
-		top_bound, left_bound, right_bound, lower_bound = iy, ix, x, y
+		top_bound, left_bound, right_bound, lower_bound = iy*2, ix*2, x*2, y*2
 		print "Rectangle bounds: "
 		print top_bound, left_bound, right_bound, lower_bound
 
@@ -299,14 +299,19 @@ global camWidth, camHeight # for masking
 camWidth, camHeight = cap.get(3), cap.get(4)
 print "\n\ncamera feed dimensions: " + str(camWidth) + " x " + str(camHeight)
 
-# grab the first frame
-ret,frame = cap.read()
+# grab the first few frames to let the camera warm up
+i = 1
+while(i < 15):
+	ret,frame = cap.read()
+	i += 1
+#resize
+frameResized = cv2.resize(frame,(0,0),fx=0.5,fy=0.5)
 
 # loop to have the user draw the rectangle
 print "\n\n\n\n\ndraw rectangle from left to right.\npress esc when you're done drawing the rectangle"
 while(True):
 	cv2.namedWindow('tank')
-	cv2.setMouseCallback('tank',drawRectangle)
+	cv2.setMouseCallback('tank',frameResized)
 	cv2.imshow('tank',frame)
 	k = cv2.waitKey(1) & 0xFF
 	if k == 27:
@@ -404,21 +409,22 @@ while(time.time() - startOfTrial < lengthOfTrial):
 	# draw the centroids on the image
 	cv2.circle(frame,coordinates[-1],6,[0,0,255],-1)
 	
-	if center != None:
-		cv2.putText(frame,str(zone[-1]),(leftBound,lower_bound+50), cv2.FONT_HERSHEY_PLAIN, 3.0,(255,255,255))
+	cv2.putText(frame,str(zone[-1]),(leftBound,lower_bound+50), cv2.FONT_HERSHEY_PLAIN, 3.0,(255,255,255))
 	cv2.putText(frame,str("frame " + str(counter)), (leftBound,lower_bound+150),cv2.FONT_HERSHEY_PLAIN, 3.0,(255,255,255))
-
+	
+	#resize image for the laptop
+	frame = cv2.resize(frame,(0,0),fx=0.5,fy=0.5)
 	cv2.imshow('image',frame)
 	#cv2.imshow('thresh',masked)
 	#cv2.imshow('diff',difference)
 	
 	# each loop should take 0.2 seconds to ensure a framerate of 5 fps
 	endOfLoop = time.time()
-	try:
-		print endOfLoop-beginningOfLoop
-		time.sleep(0.17-(endOfLoop-beginningOfLoop))
-	except:
-		pass
+# 	try:
+# 		print endOfLoop-beginningOfLoop
+# 		time.sleep(0.17-(endOfLoop-beginningOfLoop))
+# 	except:
+# 		pass
 	
 	print "time of loop: " + str(round(time.time()-beginningOfLoop,4))
 	
