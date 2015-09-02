@@ -6,6 +6,9 @@ import cv2, csv, os, re, sys, time, argparse, datetime
 '''
 started 25 August 2015
 
+31 August 2015:
+modifying script so that it queries frames from a video taken with ffmpeg
+
 typical useage:
 -- run this script at the beginning of a 10 minute acclimation period (this time can be changed with the -l parameter)
 -- outline the rectangle along the bounds of the tank
@@ -17,8 +20,6 @@ typical useage:
 assumes there are four 'parts' to your video of each length. this only affects some of the stats the program prints at the end
 
 important: the long side of the tank must be perpendicular to the camera view
-
-as currently written, if given a video argument, the program will not spit out association time stats
 
 this here is a working copy of a python script I hope to use to accomplish the following:
 -- track fish in mate choice tank in real time
@@ -34,10 +35,8 @@ or if the fish needs to be re-tested
 help menu:  python realTimeTracker.py --help
 
 arguments:
---inputCamera: defaults to 0. typically 0 or 1
+--pathToVideo: full or relative path to video file
 --videoName: used to save files associated with the trial. required
---lengthOfAcclimation: time in seconds between when you press Enter and when the program starts tracking. Should be >60. defaults to 600
---lengthOfTrial: time is seconds of the trial excluding the acclimation time
 
 example of useage: python realTimeTracker.py -i /Users/lukereding/Desktop/Bertha_Scototaxis.mp4 -n jill
 
@@ -48,34 +47,29 @@ typical useage for my mate choice trials: python realTimeTracker.py -n nameOfTri
 # initialize some constants, lists, csv writer
 # construct the argument parse and parse the arguments
 ap = argparse.ArgumentParser()
-ap.add_argument("-i", "--inputCamera", help = "integer that represents which usb input the camera is. typically 0 or 1. can also be the fill path to a video file",nargs='?',default=0)
+ap.add_argument("-i", "--pathToVideo", help = "integer that represents either the relative or full path to the video you want to analyze",nargs='?',default=0)
 ap.add_argument("-n", "--videoName", help = "name of the video to be saved",required=True)
-ap.add_argument("-l", "--lengthOfAcclimation", help = "length of time (in seconds) between when you start the program and when it starts tracking. defaults to 600",nargs='?',default=600,type=int)
-ap.add_argument("-t", "--lengthOfTrial", help = "length of trial (in seconds). defaults to 1200",nargs='?',default=1200,type=int)
+ap.add_argument("-f", "--fps", help = "frames per second of the video",required=True)
 ap.add_argument("-b", "--bias", help = "proportion of time a fish spends on either the right or lefthand side of the tank to be declared side bias. defaults to 0.75",nargs='?',default=0.75)
 
 args = ap.parse_args()
 
 # print arguments to the screen
-print("\n\n\tinput camera: {}".format(args.inputCamera))
+print("\n\n\tinput path: {}".format(args.pathToVideo))
 print("\tname of trial: {}".format(args.videoName))
-print("\tlength of trial excluding acclimation: {}".format(args.lengthOfTrial))
+print("\tfps of video: {}".format(args.fps))
 print("\tbias: {}".format(args.bias))
-print "\tlength of acclimation: {}".format(args.lengthOfAcclimation) + "\n\n"
+
 args = vars(ap.parse_args())
 
-# enter a check for acclimation time. just want to ensure that acclimation time is long enough that it doesn't interfere with calculating the background image
-acclimationLength = args["lengthOfAcclimation"]
-if acclimationLength < 40:
-	sys.exit("enter a longer acclimation time. The acclimation time needs to be long enough that a background image can be computed (~60 seconds)")
-lengthOfTrial = args["lengthOfTrial"]
+fps = args["fps"]
+
 bias = args["bias"]
 if bias > 1 or bias < 0:
 	sys.exit("bias (-b) must be between 0 and 1")
 
 # calculate the time that the program should start the main loop
 start_time = time.time()
-end_time = start_time + acclimationLength
 
 lower = np.array([0,0,0])
 upper = np.array([255,255,20])
@@ -111,9 +105,8 @@ def checkSideBias(left,right,neutral,bias):
 		return("looks good")
 
 def printUsefulStuff(listOfSides,fps,biasProp):
-	
+	fps = int(fps)
 	# print realized fps for the trial
-	print "\n\n\n\nrealized fps: " + str(fps)
 	print "\ntotal frames: " + str(len(listOfSides))
 	
 	# now subset the list of sides into four parts. each will be a quarter of the total length of the list
@@ -165,7 +158,7 @@ def printUsefulStuff(listOfSides,fps,biasProp):
 	
 	## check for side bias in the two parts where stimuli were present:
 	print "\n\nchecking side bias for parts 2 and 4, where male stimuli were present:\n\n"
-	print "left: " + str((leftPart2+leftPart4)/fps) + "\nright: " + str((rightPart2+rightPart4)/fps) + "\nneutral: " + str((neutralPart2+neutralPart4)/fps)
+	print "left: " + str((leftPart2+leftPart4)/fps) + " seconds\nright: " + str((rightPart2+rightPart4)/fps) + "seconds\nneutral: " + str((neutralPart2+neutralPart4)/fps) + " seconds"
 	bias = checkSideBias(leftPart2+leftPart4,rightPart4+rightPart2,neutralPart4+neutralPart2,biasProp)
 	print bias
 	if bias != "looks good":
@@ -189,7 +182,7 @@ def drawRectangle(event,x,y,flags,param):
 		
 	elif event == cv2.EVENT_LBUTTONUP:
 		drawing = False
-		cv2.rectangle(frame,(ix,iy),(x,y),(0,0,255),5)
+		cv2.rectangle(frameResized,(ix,iy),(x,y),(0,0,255),3)
 		# globally define the boundaries of the tank
 		global top_bound, left_bound, right_bound, lower_bound
 		top_bound, left_bound, right_bound, lower_bound = iy*2, ix*2, x*2, y*2
@@ -276,44 +269,31 @@ def getBackgroundImage(vid,numFrames):
 			print "detecting background -- on frame " + str(i) + " of " + str(numFrames)
 	return final
 
-def waitHere(end):
-	while(time.time() < end):
-		if round(end - time.time(),1) % 5 == 0:
-			print "starting in " + str(int(end - time.time())) + " seconds"  
-		time.sleep(0.1)
 #########################
 ## end function declarations ####
 ###################################################
 
-captureNumber = args["inputCamera"]
-# this is a string. If it can be converted to an integer, then convert it
-try:
-	int(float(captureNumber))
-	captureNumber = int(captureNumber)
-except:
-	pass
+path = args["pathToVideo"]
 
 # set up the video capture to the video that was the argument to the script, get feed dimensions
-cap = cv2.VideoCapture(captureNumber)
+cap = cv2.VideoCapture(path)
 global camWidth, camHeight # for masking
 camWidth, camHeight = cap.get(3), cap.get(4)
-print "\n\ncamera feed dimensions: " + str(camWidth) + " x " + str(camHeight)
+print "\n\nvideo dimensions: " + str(camWidth) + " x " + str(camHeight)
 
-# grab the first few frames to let the camera warm up
-i = 1
-while(i < 15):
-	ret,frame = cap.read()
-	i += 1
-#resize
+# grab the first frame for drawing the rectangle
+ret,frame = cap.read()
+print "grabbed first frame? " + str(ret)
+#resize the frame so that it fits on the screen 
 frameResized = cv2.resize(frame,(0,0),fx=0.5,fy=0.5)
 
 # loop to have the user draw the rectangle
 print "\n\n\n\n\ndraw rectangle from left to right.\npress esc when you're done drawing the rectangle"
 while(True):
 	cv2.namedWindow('tank')
-	cv2.setMouseCallback('tank',frameResized)
-	cv2.imshow('tank',frame)
-	k = cv2.waitKey(1) & 0xFF
+	cv2.setMouseCallback('tank',drawRectangle)
+	cv2.imshow('tank',frameResized)
+	k = cv2.waitKey(10) & 0xFF
 	if k == 27:
 		cv2.destroyAllWindows()
 		break
@@ -334,8 +314,8 @@ cv2.imwrite(name + "_background.jpg",background)
 
 # initiating with the center of the tank in case tracker can't find fish initially
 # also set up left of 'left' 'right' or 'neutral' zone
-center1 =(right_bound-left_bound)/2
-center2 = (top_bound-lower_bound)/2
+center1 =((right_bound-left_bound)/2)+left_bound
+center2 = ((lower_bound-top_bound)/2)+top_bound
 coordinates = [(center1,center2)]
 zone = []
 
@@ -345,37 +325,24 @@ leftBound = left_bound + zoneSize
 rightBound = left_bound + (2*zoneSize)
 
 # set up video writer specifying size (MUST be same size as input) and name (command line argument)
-videoWriter, pathToVideo = setupVideoWriter(camWidth, camHeight,name)
+#videoWriter, pathToVideo = setupVideoWriter(camWidth, camHeight,name)
 
-# wait until the acclimation period is over, then start the loop
-waitHere(end_time)
 
 startOfTrial = time.time()
 ###########################
 ### the main loop######
 ###################
-while(time.time() - startOfTrial < lengthOfTrial):
+while(cap.isOpened()):
 	
 	print "frame " + str(counter) + "\n\n"
-	
-	# wait until the 10 minutes while the fish is acclimating is up
-	while(time.time() < end_time):
-		if round(end_time - time.time(),1) % 5 == 0:
-			print "starting in " + str(int(end_time - time.time())) + " seconds" 
-			# wait 0.1 seconds
-		time.sleep(.1)
-	
-	# for calculating realized fps later on
-	if counter == 0:
-		beginningOfTrial = time.time()
 	
 	# for timing, maintaining constant fps
 	beginningOfLoop = time.time()
 	
 	ret,frame = cap.read()
-	cv2.putText(frame,str(datetime.datetime.now().strftime("%D %H:%M:%S.%f")), (20,20),cv2.FONT_HERSHEY_PLAIN, 1.0,(255,255,255))
-	# save the frame to the video
-	videoWriter.write(frame)
+	
+	if ret == False:
+		break
 	
 	# do image manipulations for tracking
 	hsv = convertToHSV(frame)
@@ -407,24 +374,20 @@ while(time.time() - startOfTrial < lengthOfTrial):
 	print "Center: " + str(center) + "\n"
 	
 	# draw the centroids on the image
-	cv2.circle(frame,coordinates[-1],6,[0,0,255],-1)
+	cv2.circle(frame,coordinates[-1],4,[0,0,255],-1)
 	
 	cv2.putText(frame,str(zone[-1]),(leftBound,lower_bound+50), cv2.FONT_HERSHEY_PLAIN, 3.0,(255,255,255))
-	cv2.putText(frame,str("frame " + str(counter)), (leftBound,lower_bound+150),cv2.FONT_HERSHEY_PLAIN, 3.0,(255,255,255))
+	cv2.putText(frame,str("frame " + str(counter)), (leftBound,lower_bound+100),cv2.FONT_HERSHEY_PLAIN, 3.0,(255,255,255))
 	
 	#resize image for the laptop
 	frame = cv2.resize(frame,(0,0),fx=0.5,fy=0.5)
 	cv2.imshow('image',frame)
-	#cv2.imshow('thresh',masked)
-	#cv2.imshow('diff',difference)
+	masked = cv2.resize(masked,(0,0),fx=0.5,fy=0.5)
+	cv2.imshow('thresh',masked)
+	difference = cv2.resize(difference,(0,0),fx=0.5,fy=0.5)
+	cv2.imshow('diff',difference)
 	
-	# each loop should take 0.2 seconds to ensure a framerate of 5 fps
 	endOfLoop = time.time()
-# 	try:
-# 		print endOfLoop-beginningOfLoop
-# 		time.sleep(0.17-(endOfLoop-beginningOfLoop))
-# 	except:
-# 		pass
 	
 	print "time of loop: " + str(round(time.time()-beginningOfLoop,4))
 	
@@ -452,13 +415,12 @@ output.close()
 ### after the program exits, print some useful stuff to the screen
 # first calculate realized fps
 print "counter: " + str(counter)
-print "total time: " + str(endOfLoop-beginningOfTrial)
-realizedFPS = counter / (endOfLoop-beginningOfTrial)
+print "\nthis program took " + str(time.time() - start_time) + " seconds to run."
 
 # calculate and print association time to the screen
-printUsefulStuff(zone, realizedFPS,bias)
+printUsefulStuff(zone,fps,bias)
 
-print "\n\nCongrats. Lots of files saved.\n\n\tYour video file is saved at " + str(pathToVideo) + "\n\tYour csv file with tracking coordinates is saved at " + os.getcwd() + "/" + name + ".csv"
+print "\n\nCongrats. Lots of files saved.\n\n\tYour video file is saved at " + str(path) + "\n\tYour csv file with tracking coordinates is saved at " + os.getcwd() + "/" + name + ".csv"
 print "\tYour list of tentative association zones occupied in each frame is saved at " + os.getcwd() + "/" + name + ".txt"
 
 

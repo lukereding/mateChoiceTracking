@@ -46,8 +46,10 @@ while(time.time() < beginningTime + waiting):
 
 print "\n\n\n\n\n\tDONE WAITING"
 
+enterTheLoop = time.time()
+
 counter = 0
-while(time.time()-beginningTime <= recordingTime):
+while(time.time()-enterTheLoop <= recordingTime):
 	ret, frame = cap.read()
 	counter += 1
 	if ret==True:
@@ -55,7 +57,7 @@ while(time.time()-beginningTime <= recordingTime):
 		cv2.putText(frame,str(datetime.datetime.now().strftime("%D %H:%M:%S.%f")), (20,20),cv2.FONT_HERSHEY_PLAIN, 1.0,(255,255,255))
 		# write the frame
 		out.write(frame)
-		cv2.imshow('frame',frame)
+		#cv2.imshow('frame',frame)
 		
 		if counter % 100 == 0:
 			print "still recording"
@@ -68,4 +70,8 @@ while(time.time()-beginningTime <= recordingTime):
 # Release everything if job is finished
 cap.release()
 out.release()
+
+print str(counter) + "frames total"
+print "realized FPS: " + str(counter/(enterTheLoop-time.time()))
+
 cv2.destroyAllWindows()
