@@ -11,8 +11,14 @@
 ### the two videos of what you want to show the fish
 ### photo of whatever background you're using, of the same dimensions as the video
 ## make this script executable with chmod makingVideosForMateChoiceExperiments.sh
-## ./makingVideosForMateChoiceExperiments.sh nameOfVideo1.avi nameOfVideo2.avi
 
+# example of usage
+## ./makingVideosForMateChoiceExperiments.sh nameOfVideo1 nameOfVideo2
+
+
+# some other things:
+### due to my poor bash coding abilities, the animations need to be .avi files and need to be passed as arguments to the script. the file extension should be left off
+### the countdown video should have count in it and be a .mp4 file
 
 ##### Blender outputting
 
@@ -26,64 +32,23 @@
 # I exported as a AVI RAW
 # 
 # I also save a photo of the background without the fish to use for the background
-#######################
-
-# 
-# FILES=/path/to/*
-# for f in $FILES
-# do
-#   echo "Processing $f file..."
-#   # take action on each file. $f store current file name
-#   cat $f
-# done
-
-####################################
-
-
-
-
-# use this to concatenate
-## note: the videos must be the same size 
-# you can use something like ffmpeg -i flipped5min.mp4 -vf scale=1280:720 flipped5minScaled.mp4
-# to scale them if they aren't
-ffmpeg -i countdown5minFlipped.mp4 -vcodec libx264 v1.mp4
-ffmpeg -i flipped5min.mp4 -vcodec libx264 v2.mp4
-echo "file 'v1.mp4'" > listOfVideos
-echo "file 'v2.mp4'" >> listOfVideos
-ffmpeg -f concat -i listOfVideos -c copy -y videoConcat.avi
-
-
-# for looping
-for i in {1..12}; do printf "file '%s'\n" largeNigrinsisCourtingBIG.mp4 >> list.txt; done
-ffmpeg -f concat -i list.txt -c copy largeMaleCourting.mp4
-
-
-# for overlaying one video onto another
-# see https://trac.ffmpeg.org/wiki/Create%20a%20mosaic%20out%20of%20several%20input%20videos
-ffmpeg -i background5min.mp4 -i flipped5Min.mp4 -filter_complex "nullsrc=size=1920x1080 [base]; [0:v] setpts=PTS-STARTPTS, scale=1920x1080 [backgroundVideo]; [1:v] setpts=PTS-STARTPTS, scale=800x480 [upperMiddleFish]; [base][backgroundVideo] overlay=shortest=1 [tmp1]; [tmp1][upperMiddleFish] overlay=shortest=1:x=700" -c:v libx264 -y output.mkv
-
-
-### making background video (where the image is the only .jpg in your directory):
-ffmpeg -framerate 1/150 -i *.jpg -r 15 background.mp4
-
-
 ############################# 
 
 
 ##### black video
-ffmpeg -framerate 1/300 -i black.jpg -r 25 black.mp4
+ffmpeg -framerate 1/300 -i black.jpg -framerate 25 black.mp4
 
 ##### countdown
 # scale the countdown by the resolution of your monitor
 # make 25 fps
 # flip it
-ffmpeg -i *count*.mp4 -vf -r 25 scale=1280:1024 final10MinCountdown.mp4
+ffmpeg -i Final10Countdown.mp4 -vf -framerate 25 scale=1280:1024 final10MinCountdown.mp4
 
 ####### background video
 # if the dimensions of background.jpg are not even numbers, this will throw an error
 # make the video at 25 fps
 # flip it
-ffmpeg -framerate 1/300 -i *.jpg -r 25 -vf "hflip,vflip,format=yuv420p" background5min.mp4
+ffmpeg -framerate 1/300 -i *.jpg -framerate 25 -vf "hflip,vflip,format=yuv420p" background5min.mp4
 
 
 # make inset black video in in background video
