@@ -270,7 +270,7 @@ def getBackgroundImage(vid,numFrames):
 		final = cv2.convertScaleAbs(update)
 		# increment the counter
 		i += 1
-		
+		print i
 		# print something every 100 frames so the user knows the gears are grinding
 		if i%100 == 0:
 			print "detecting background -- on frame " + str(i) + " of " + str(numFrames)

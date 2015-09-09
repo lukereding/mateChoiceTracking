@@ -41,7 +41,7 @@ out = cv2.VideoWriter(name + '.avi',fourcc, 5.0, (int(width),int(height)))
 
 # spin your wheels until recording starts:
 while(time.time() < beginningTime + waiting):
-	print beginningTime + waiting - time.time()
+	print round(beginningTime + waiting - time.time(),1)
 	time.sleep(1)
 
 print "\n\n\n\n\n\tDONE WAITING"
