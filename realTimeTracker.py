@@ -301,8 +301,8 @@ while(True):
 # need to do this step after the drawing the rectangle so that we know the bounds for masking in the call to convertToHSV
 #hsv_initial = convertToHSV(frame)
 
-# calculate background image of tank for 1500 frames
-background = getBackgroundImage(cap,1500)
+# calculate background image of tank for x frames
+background = getBackgroundImage(cap,2000)
 hsv_initial = convertToHSV(background)
 cv2.imwrite(name + "_background.jpg",background)
 
@@ -329,6 +329,7 @@ rightBound = left_bound + (2*zoneSize)
 
 
 startOfTrial = time.time()
+cap = cv2.VideoCapture(path)
 ###########################
 ### the main loop######
 ###################
@@ -342,6 +343,7 @@ while(cap.isOpened()):
 	ret,frame = cap.read()
 	
 	if ret == False:
+		print "didn't read frame from video file"
 		break
 	
 	# do image manipulations for tracking
@@ -382,10 +384,10 @@ while(cap.isOpened()):
 	#resize image for the laptop
 	frame = cv2.resize(frame,(0,0),fx=0.5,fy=0.5)
 	cv2.imshow('image',frame)
-	masked = cv2.resize(masked,(0,0),fx=0.5,fy=0.5)
-	cv2.imshow('thresh',masked)
-	difference = cv2.resize(difference,(0,0),fx=0.5,fy=0.5)
-	cv2.imshow('diff',difference)
+	#masked = cv2.resize(masked,(0,0),fx=0.5,fy=0.5)
+	#cv2.imshow('thresh',masked)
+	#difference = cv2.resize(difference,(0,0),fx=0.5,fy=0.5)
+	#cv2.imshow('diff',difference)
 	
 	endOfLoop = time.time()
 	
