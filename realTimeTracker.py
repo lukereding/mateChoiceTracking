@@ -281,8 +281,11 @@ global camWidth, camHeight # for masking
 camWidth, camHeight = cap.get(3), cap.get(4)
 print "\n\nvideo dimensions: " + str(camWidth) + " x " + str(camHeight)
 
-# grab the first frame for drawing the rectangle
-ret,frame = cap.read()
+# grab the 20th frame for drawing the rectangle
+i = 0
+while i <20:
+	ret,frame = cap.read()
+	i += 1
 print "grabbed first frame? " + str(ret)
 #resize the frame so that it fits on the screen 
 frameResized = cv2.resize(frame,(0,0),fx=0.5,fy=0.5)
