@@ -11,6 +11,7 @@ which ffmpeg
 
 # start ffmpeg
 # see https://trac.ffmpeg.org/wiki/EncodingForStreamingSites for explanations of some of the arguments
+# to get this to work on something other than ffmpeg v 2.6.3, pass the -i argument after the size and framerate options # not tested
 ffmpeg -f avfoundation -i "Microsoft:none" -preset superfast -q 30 -crf 30 -maxrate 3000k -bufsize 800k -r "$FPS" -framerate "$FPS" -t "$LENGTH" -vcodec libx264 -y "$NAME"".avi"
 
 
