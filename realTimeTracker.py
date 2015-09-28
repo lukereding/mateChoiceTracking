@@ -296,7 +296,7 @@ while(True):
 	cv2.namedWindow('tank')
 	cv2.setMouseCallback('tank',drawRectangle)
 	cv2.imshow('tank',frameResized)
-	k = cv2.waitKey(10) & 0xFF
+	k = cv2.waitKey(100)
 	if k == 27:
 		cv2.destroyAllWindows()
 		break
