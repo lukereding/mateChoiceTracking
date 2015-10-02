@@ -157,7 +157,7 @@ def printUsefulStuff(listOfSides,fps,biasProp):
 	# check for time spend in the neutral zone
 	print "\nchecking for to see whether the fish spend > 50% of the trial in the neutral part of the tank:\n"
 	time_neutral = neutralPart2 + neutralPart3
-	print "time in neutral zone during parts 2 and 3: " + str(time_neutral)
+	print "time in neutral zone during parts 2 and 3: " + str(int(time_neutral))
 	if time_neutral > 300:
 		print "make a note that the female spent " + str(int(time_neutral)/600) + "% of the trial in the neutral zone"
 	
@@ -262,7 +262,7 @@ def find_tank_bounds(image,name_of_trial):
 	# convert to hsv
 	hsv = cv2.cvtColor(blur, cv2.COLOR_BGR2HSV)
 	# get only the whitish parts
-	mask = cv2.inRange(hsv,np.array([0,0,0]),np.array([250,15,255]))
+	mask = cv2.inRange(hsv,np.array([0,0,144]),np.array([102,25,255]))
 	
 	# find all contours in the frame
 	contours = cv2.findContours(mask,cv2.RETR_TREE,cv2.CHAIN_APPROX_SIMPLE)[0]
@@ -273,17 +273,19 @@ def find_tank_bounds(image,name_of_trial):
 		centroid_x = int(m['m10']/m['m00'])
 		centroid_y = int(m['m01']/m['m00'])
 		x,y,w,h = cv2.boundingRect(j)
-		
+		print "x,y,w,h:"
+		print x,y,w,h
 		# declare the tank bounds globally
 		global top_bound, left_bound, right_bound, lower_bound
-		top_bound, left_bound, right_bound, lower_bound = int(y*0.7) + int(h*1.3), int(x*0.8), int(x*0.8) + int(w*1.2), int(y*0.7)
+		top_bound, left_bound, right_bound, lower_bound = int(y) + int(h) + 50, int(x) - 50, int(x) + 50 + int(w), int(y) - 50
 		print "rectange bounds: "
 		print top_bound, left_bound, right_bound, lower_bound
 		
 		# save a photo of the tank bounds for reference:
 		# first make a copy of the image
 		image_copy = image.copy()
-		cv2.rectangle(image_copy,(int(x*0.8),int(y*0.7)),(int(x*0.8)+int(w*1.2),int(y*0.7)+int(h*1.3)),(0,255,0),10)
+		cv2.rectangle(image_copy,(left_bound, top_bound),(right_bound,lower_bound),(0,255,0),10)
+		#cv2.rectangle(image_copy,(int(x*0.8),int(y*0.8)),(int(x*0.8)+int(w*1.2),int(y*0.8)+int(h*1.2)),(0,255,0),10)
 		cv2.imwrite(str(name_of_trial) + "_tank_bounds.jpg", image_copy)
 
 	
@@ -393,8 +395,8 @@ while(cap.isOpened()):
 	# draw the centroids on the image
 	cv2.circle(frame,coordinates[-1],4,[0,0,255],-1)
 	
-	cv2.putText(frame,str(zone[-1]),(leftBound,lower_bound+50), cv2.FONT_HERSHEY_PLAIN, 3.0,(255,255,255))
-	cv2.putText(frame,str("frame " + str(counter)), (leftBound,lower_bound+100),cv2.FONT_HERSHEY_PLAIN, 3.0,(255,255,255))
+	cv2.putText(frame,str(zone[-1]),(leftBound,upper_bound+50), cv2.FONT_HERSHEY_PLAIN, 3.0,(255,255,255))
+	cv2.putText(frame,str("frame " + str(counter)), (leftBound,upper_bound+100),cv2.FONT_HERSHEY_PLAIN, 3.0,(255,255,255))
 	
 	#resize image for the laptop
 	frame = cv2.resize(frame,(0,0),fx=0.5,fy=0.5)
