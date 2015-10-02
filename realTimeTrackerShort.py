@@ -156,10 +156,10 @@ def printUsefulStuff(listOfSides,fps,biasProp):
 	
 	# check for time spend in the neutral zone
 	print "\nchecking for to see whether the fish spend > 50% of the trial in the neutral part of the tank:\n"
-	time_neutral = neutralPart2 + neutralPart3
-	print "time in neutral zone during parts 2 and 3: " + str(int(time_neutral))
+	time_neutral = int((neutralPart2+neutralPart3)/fps)
+	print "time in neutral zone during parts 2 and 3: " + str(time_neutral)
 	if time_neutral > 300:
-		print "make a note that the female spent " + str(int(time_neutral)/600) + "% of the trial in the neutral zone"
+		print "make a note that the female spent " + str(time_neutral/600) + "% of the trial in the neutral zone"
 	
 	if bias != "looks good":
 		print "\tFEMALE MUST BE RE-TESTED. SET ASIDE FEMALE AND RE-TEST AT A LATER DATE"
