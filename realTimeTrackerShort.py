@@ -1,14 +1,11 @@
-
 import numpy as np
 import cv2, csv, os, re, sys, time, argparse, datetime
 
 
 '''
 started 25 August 2015
-
 31 August 2015:
 modifying script so that it queries frames from a video taken with ffmpeg
-
 typical useage:
 -- run this script at the beginning of a 10 minute acclimation period (this time can be changed with the -l parameter)
 -- outline the rectangle along the bounds of the tank
@@ -16,11 +13,8 @@ typical useage:
 -- the program starts automatically and shuts off 20 minutes later. You can tweak this amount of time with the -t parameter
 -- a video file, list of association zones occupied, a csv file containing coordinates are all saved in the directory where you ran the script from
 -- association time stats are spit out at the end. the fish is tested for side bias in the 2nd and 4th quarters of the trial period
-
 assumes there are four 'parts' to your video of each length. this only affects some of the stats the program prints at the end
-
 important: the long side of the tank must be perpendicular to the camera view
-
 this here is a working copy of a python script I hope to use to accomplish the following:
 -- track fish in mate choice tank in real time
 -- save videos from each experiment
@@ -31,15 +25,11 @@ or if the fish needs to be re-tested
 -- ensure constant framerate
 -- track progress for detecting background??
 -- incorporating all four parts of each trial
-
 help menu:  python realTimeTracker.py --help
-
 arguments:
 --pathToVideo: full or relative path to video file
 --videoName: used to save files associated with the trial. required
-
 example of useage: python realTimeTracker.py -i /Users/lukereding/Desktop/Bertha_Scototaxis.mp4 -n jill
-
 typical useage for my mate choice trials: python realTimeTracker.py -n nameOfTrialGoesHere
 '''
 
@@ -169,7 +159,7 @@ def printUsefulStuff(listOfSides,fps,biasProp):
 	time_neutral = neutralPart2 + neutralPart3
 	print "time in neutral zone during parts 2 and 3: " + str(time_neutral)
 	if time_neutral > 300:
-		print "make a note that the female spent " + str(time_neutral/600) + "% of the trial in the neutral zone"
+		print "make a note that the female spent " + str(int(time_neutral)/600) + "% of the trial in the neutral zone"
 	
 	if bias != "looks good":
 		print "\tFEMALE MUST BE RE-TESTED. SET ASIDE FEMALE AND RE-TEST AT A LATER DATE"
@@ -183,21 +173,6 @@ def setupVideoWriter(width, height,videoName):
 	out = cv2.VideoWriter(videoName,fourcc, 5.0, (int(width),int(height)))
 	return out, videoName
 
-# mouse callback function; draws the rectangle
-def drawRectangle(event,x,y,flags,param):
-	global ix,iy,drawing
-	if event == cv2.EVENT_LBUTTONDOWN:
-		drawing = True
-		ix,iy = x,y
-		
-	elif event == cv2.EVENT_LBUTTONUP:
-		drawing = False
-		cv2.rectangle(frameResized,(ix,iy),(x,y),(0,0,255),3)
-		# globally define the boundaries of the tank
-		global top_bound, left_bound, right_bound, lower_bound
-		top_bound, left_bound, right_bound, lower_bound = iy*2, ix*2, x*2, y*2
-		print "Rectangle bounds: "
-		print top_bound, left_bound, right_bound, lower_bound
 
 # converts a frame to HSV, blurs it, masks it to only get the tank by itself
 ## TO DO: get rid of tank bounds as global variables, include as arguments to this function
@@ -209,7 +184,8 @@ def convertToHSV(frame):
 	# apply mask to get rid of stuff outside the tank
 	mask = np.zeros((camHeight, camWidth, 3),np.uint8)
 	# use rectangle bounds for masking
-	mask[top_bound:lower_bound,left_bound:right_bound] = hsv[top_bound:lower_bound,left_bound:right_bound]
+	mask[lower_bound:top_bound,left_bound:right_bound] = hsv[lower_bound:top_bound,left_bound:right_bound]
+	cv2.imwrite("mask.jpg",mask)
 	return mask
 
 	
@@ -279,6 +255,40 @@ def getBackgroundImage(vid,numFrames):
 			print "detecting background -- on frame " + str(i) + " of " + str(numFrames)
 	return final
 
+def find_tank_bounds(image,name_of_trial):
+	
+	# blur the image a lot
+	blur = cv2.blur(image, (11,11))
+	# convert to hsv
+	hsv = cv2.cvtColor(blur, cv2.COLOR_BGR2HSV)
+	# get only the whitish parts
+	mask = cv2.inRange(hsv,np.array([0,0,0]),np.array([250,15,255]))
+	
+	# find all contours in the frame
+	contours = cv2.findContours(mask,cv2.RETR_TREE,cv2.CHAIN_APPROX_SIMPLE)[0]
+	# find largest contour
+	largestCon = sorted(contours, key = cv2.contourArea, reverse = True)[:1]
+	for j in largestCon:	
+		m = cv2.moments(j)		
+		centroid_x = int(m['m10']/m['m00'])
+		centroid_y = int(m['m01']/m['m00'])
+		x,y,w,h = cv2.boundingRect(j)
+		
+		# declare the tank bounds globally
+		global top_bound, left_bound, right_bound, lower_bound
+		top_bound, left_bound, right_bound, lower_bound = int(y*0.7) + int(h*1.3), int(x*0.8), int(x*0.8) + int(w*1.2), int(y*0.7)
+		print "rectange bounds: "
+		print top_bound, left_bound, right_bound, lower_bound
+		
+		# save a photo of the tank bounds for reference:
+		# first make a copy of the image
+		image_copy = image.copy()
+		cv2.rectangle(image_copy,(int(x*0.8),int(y*0.7)),(int(x*0.8)+int(w*1.2),int(y*0.7)+int(h*1.3)),(0,255,0),10)
+		cv2.imwrite(str(name_of_trial) + "_tank_bounds.jpg", image_copy)
+
+	
+
+
 #########################
 ## end function declarations ####
 ###################################################
@@ -297,25 +307,17 @@ while i <20:
 	ret,frame = cap.read()
 	i += 1
 print "grabbed first frame? " + str(ret)
-#resize the frame so that it fits on the screen 
-frameResized = cv2.resize(frame,(0,0),fx=0.5,fy=0.5)
-
-# loop to have the user draw the rectangle
-print "\n\n\n\n\ndraw rectangle from left to right.\npress esc when you're done drawing the rectangle"
-while(True):
-	cv2.namedWindow('tank')
-	cv2.setMouseCallback('tank',drawRectangle)
-	cv2.imshow('tank',frameResized)
-	k = cv2.waitKey(100)
-	if k == 27:
-		cv2.destroyAllWindows()
-		break
 
 # need to do this step after the drawing the rectangle so that we know the bounds for masking in the call to convertToHSV
 #hsv_initial = convertToHSV(frame)
 
 # calculate background image of tank for x frames
 background = getBackgroundImage(cap,2000)
+
+# find the bounds of the tank:
+find_tank_bounds(background,name)
+
+# convert background to HSV and save a copy of the background image for reference
 hsv_initial = convertToHSV(background)
 cv2.imwrite(name + "_background.jpg",background)
 
