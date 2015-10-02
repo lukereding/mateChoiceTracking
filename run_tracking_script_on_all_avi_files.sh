@@ -9,5 +9,5 @@ do
 	PATH_OF_TRIAL=${file%.avi}
 	NAME_OF_TRIAL=${PATH_OF_TRIAL##*/}
 	echo $NAME
-	python /Users/lukereding/Desktop/mateChoiceTracking/realTimeTrackerShort.py -i $file -n $NAME_OF_TRIAL -f 10 >> "$NAME""_log.txt"
+	python /Users/lukereding/Desktop/mateChoiceTracking/realTimeTrackerShort.py -i $file -n $NAME_OF_TRIAL -f 10 >> "$NAME_OF_TRIAL""_log.txt"
 done
