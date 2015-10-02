@@ -394,6 +394,7 @@ while(cap.isOpened()):
 	# draw the centroids on the image
 	cv2.circle(frame,coordinates[-1],4,[0,0,255],-1)
 	
+	cv2.putText(frame,str(name),(int(camWidth/2),50), cv2.FONT_HERSHEY_PLAIN, 3.0,(255,255,255))
 	cv2.putText(frame,str(zone[-1]),(leftBound,top_bound+50), cv2.FONT_HERSHEY_PLAIN, 3.0,(255,255,255))
 	cv2.putText(frame,str("frame " + str(counter)), (leftBound,top_bound+100),cv2.FONT_HERSHEY_PLAIN, 3.0,(255,255,255))
 	
