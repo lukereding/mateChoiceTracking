@@ -185,7 +185,6 @@ def convertToHSV(frame):
 	mask = np.zeros((camHeight, camWidth, 3),np.uint8)
 	# use rectangle bounds for masking
 	mask[lower_bound:top_bound,left_bound:right_bound] = hsv[lower_bound:top_bound,left_bound:right_bound]
-	cv2.imwrite("mask.jpg",mask)
 	return mask
 
 	
@@ -395,8 +394,8 @@ while(cap.isOpened()):
 	# draw the centroids on the image
 	cv2.circle(frame,coordinates[-1],4,[0,0,255],-1)
 	
-	cv2.putText(frame,str(zone[-1]),(leftBound,upper_bound+50), cv2.FONT_HERSHEY_PLAIN, 3.0,(255,255,255))
-	cv2.putText(frame,str("frame " + str(counter)), (leftBound,upper_bound+100),cv2.FONT_HERSHEY_PLAIN, 3.0,(255,255,255))
+	cv2.putText(frame,str(zone[-1]),(leftBound,top_bound+50), cv2.FONT_HERSHEY_PLAIN, 3.0,(255,255,255))
+	cv2.putText(frame,str("frame " + str(counter)), (leftBound,top_bound+100),cv2.FONT_HERSHEY_PLAIN, 3.0,(255,255,255))
 	
 	#resize image for the laptop
 	frame = cv2.resize(frame,(0,0),fx=0.5,fy=0.5)
