@@ -313,7 +313,7 @@ print "grabbed first frame? " + str(ret)
 #hsv_initial = convertToHSV(frame)
 
 # calculate background image of tank for x frames
-background = getBackgroundImage(cap,2000)
+background = getBackgroundImage(cap,5000)
 
 # find the bounds of the tank:
 find_tank_bounds(background,name)
