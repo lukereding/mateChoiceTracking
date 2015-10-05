@@ -1,67 +1,27 @@
-<<<<<<< HEAD
-
-=======
->>>>>>> laptop
 import numpy as np
 import cv2, csv, os, re, sys, time, argparse, datetime
 
 
 '''
 started 25 August 2015
-<<<<<<< HEAD
 
 31 August 2015:
 modifying script so that it queries frames from a video taken with ffmpeg
-
-=======
-31 August 2015:
-modifying script so that it queries frames from a video taken with ffmpeg
->>>>>>> laptop
-typical useage:
--- run this script at the beginning of a 10 minute acclimation period (this time can be changed with the -l parameter)
--- outline the rectangle along the bounds of the tank
--- wait for the camera to detect the background
--- the program starts automatically and shuts off 20 minutes later. You can tweak this amount of time with the -t parameter
--- a video file, list of association zones occupied, a csv file containing coordinates are all saved in the directory where you ran the script from
--- association time stats are spit out at the end. the fish is tested for side bias in the 2nd and 4th quarters of the trial period
-<<<<<<< HEAD
 
 assumes there are four 'parts' to your video of each length. this only affects some of the stats the program prints at the end
 
 important: the long side of the tank must be perpendicular to the camera view
 
-=======
 assumes there are four 'parts' to your video of each length. this only affects some of the stats the program prints at the end
 important: the long side of the tank must be perpendicular to the camera view
->>>>>>> laptop
-this here is a working copy of a python script I hope to use to accomplish the following:
--- track fish in mate choice tank in real time
--- save videos from each experiment
--- have the experimenter record the bounds of the fish tank
--- have the tracker record association time in real time
--- have the program output error messages / let the experimenter know if there were problems with the tracker 
-or if the fish needs to be re-tested
--- ensure constant framerate
--- track progress for detecting background??
--- incorporating all four parts of each trial
-<<<<<<< HEAD
 
-help menu:  python realTimeTracker.py --help
 
-arguments:
---pathToVideo: full or relative path to video file
---videoName: used to save files associated with the trial. required
-
-example of useage: python realTimeTracker.py -i /Users/lukereding/Desktop/Bertha_Scototaxis.mp4 -n jill
-
-=======
 help menu:  python realTimeTracker.py --help
 arguments:
 --pathToVideo: full or relative path to video file
 --videoName: used to save files associated with the trial. required
-example of useage: python realTimeTracker.py -i /Users/lukereding/Desktop/Bertha_Scototaxis.mp4 -n jill
->>>>>>> laptop
-typical useage for my mate choice trials: python realTimeTracker.py -n nameOfTrialGoesHere
+example of useage: python realTimeTracker.py -i /Users/lukereding/Desktop/Bertha_Scototaxis.mp4 -n Bertha -f 10
+
 '''
 
 
@@ -187,11 +147,9 @@ def printUsefulStuff(listOfSides,fps,biasProp):
 	
 	# check for time spend in the neutral zone
 	print "\nchecking for to see whether the fish spend > 50% of the trial in the neutral part of the tank:\n"
-<<<<<<< HEAD
-	time_neutral = neutralPart2 + neutralPart3
-=======
+
 	time_neutral = int((neutralPart2+neutralPart3)/fps)
->>>>>>> laptop
+	
 	print "time in neutral zone during parts 2 and 3: " + str(time_neutral)
 	if time_neutral > 300:
 		print "make a note that the female spent " + str(time_neutral/600) + "% of the trial in the neutral zone"
@@ -208,25 +166,6 @@ def setupVideoWriter(width, height,videoName):
 	out = cv2.VideoWriter(videoName,fourcc, 5.0, (int(width),int(height)))
 	return out, videoName
 
-<<<<<<< HEAD
-# mouse callback function; draws the rectangle
-def drawRectangle(event,x,y,flags,param):
-	global ix,iy,drawing
-	if event == cv2.EVENT_LBUTTONDOWN:
-		drawing = True
-		ix,iy = x,y
-		
-	elif event == cv2.EVENT_LBUTTONUP:
-		drawing = False
-		cv2.rectangle(frameResized,(ix,iy),(x,y),(0,0,255),3)
-		# globally define the boundaries of the tank
-		global top_bound, left_bound, right_bound, lower_bound
-		top_bound, left_bound, right_bound, lower_bound = iy*2, ix*2, x*2, y*2
-		print "Rectangle bounds: "
-		print top_bound, left_bound, right_bound, lower_bound
-=======
->>>>>>> laptop
-
 # converts a frame to HSV, blurs it, masks it to only get the tank by itself
 ## TO DO: get rid of tank bounds as global variables, include as arguments to this function
 def convertToHSV(frame):
@@ -237,11 +176,8 @@ def convertToHSV(frame):
 	# apply mask to get rid of stuff outside the tank
 	mask = np.zeros((camHeight, camWidth, 3),np.uint8)
 	# use rectangle bounds for masking
-<<<<<<< HEAD
-	mask[top_bound:lower_bound,left_bound:right_bound] = hsv[top_bound:lower_bound,left_bound:right_bound]
-=======
+
 	mask[lower_bound:top_bound,left_bound:right_bound] = hsv[lower_bound:top_bound,left_bound:right_bound]
->>>>>>> laptop
 	return mask
 
 	
@@ -311,8 +247,6 @@ def getBackgroundImage(vid,numFrames):
 			print "detecting background -- on frame " + str(i) + " of " + str(numFrames)
 	return final
 
-<<<<<<< HEAD
-=======
 def find_tank_bounds(image,name_of_trial):
 	
 	# blur the image a lot
@@ -346,10 +280,6 @@ def find_tank_bounds(image,name_of_trial):
 		#cv2.rectangle(image_copy,(int(x*0.8),int(y*0.8)),(int(x*0.8)+int(w*1.2),int(y*0.8)+int(h*1.2)),(0,255,0),10)
 		cv2.imwrite(str(name_of_trial) + "_tank_bounds.jpg", image_copy)
 
-	
-
-
->>>>>>> laptop
 #########################
 ## end function declarations ####
 ###################################################
@@ -368,37 +298,19 @@ while i <20:
 	ret,frame = cap.read()
 	i += 1
 print "grabbed first frame? " + str(ret)
-<<<<<<< HEAD
-#resize the frame so that it fits on the screen 
-frameResized = cv2.resize(frame,(0,0),fx=0.5,fy=0.5)
 
-# loop to have the user draw the rectangle
-print "\n\n\n\n\ndraw rectangle from left to right.\npress esc when you're done drawing the rectangle"
-while(True):
-	cv2.namedWindow('tank')
-	cv2.setMouseCallback('tank',drawRectangle)
-	cv2.imshow('tank',frameResized)
-	k = cv2.waitKey(100)
-	if k == 27:
-		cv2.destroyAllWindows()
-		break
-=======
->>>>>>> laptop
 
 # need to do this step after the drawing the rectangle so that we know the bounds for masking in the call to convertToHSV
 #hsv_initial = convertToHSV(frame)
 
 # calculate background image of tank for x frames
-<<<<<<< HEAD
-background = getBackgroundImage(cap,2000)
-=======
+
 background = getBackgroundImage(cap,5000)
 
 # find the bounds of the tank:
 find_tank_bounds(background,name)
 
 # convert background to HSV and save a copy of the background image for reference
->>>>>>> laptop
 hsv_initial = convertToHSV(background)
 cv2.imwrite(name + "_background.jpg",background)
 
@@ -474,14 +386,10 @@ while(cap.isOpened()):
 	# draw the centroids on the image
 	cv2.circle(frame,coordinates[-1],4,[0,0,255],-1)
 	
-<<<<<<< HEAD
-	cv2.putText(frame,str(zone[-1]),(leftBound,lower_bound+50), cv2.FONT_HERSHEY_PLAIN, 3.0,(255,255,255))
-	cv2.putText(frame,str("frame " + str(counter)), (leftBound,lower_bound+100),cv2.FONT_HERSHEY_PLAIN, 3.0,(255,255,255))
-=======
+
 	cv2.putText(frame,str(name),(int(camWidth/2),50), cv2.FONT_HERSHEY_PLAIN, 3.0,(255,255,255))
 	cv2.putText(frame,str(zone[-1]),(leftBound,top_bound+50), cv2.FONT_HERSHEY_PLAIN, 3.0,(255,255,255))
 	cv2.putText(frame,str("frame " + str(counter)), (leftBound,top_bound+100),cv2.FONT_HERSHEY_PLAIN, 3.0,(255,255,255))
->>>>>>> laptop
 	
 	#resize image for the laptop
 	frame = cv2.resize(frame,(0,0),fx=0.5,fy=0.5)
@@ -528,8 +436,4 @@ print "\n\nCongrats. Lots of files saved.\n\n\tYour video file is saved at " + s
 print "\tYour list of tentative association zones occupied in each frame is saved at " + os.getcwd() + "/" + name + ".txt"
 
 
-<<<<<<< HEAD
 cv2.destroyAllWindows()
-=======
-cv2.destroyAllWindows()
->>>>>>> laptop
