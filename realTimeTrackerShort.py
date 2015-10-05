@@ -1,4 +1,4 @@
-#!/usr/bin/env
+
 import numpy as np
 import cv2, csv, os, re, sys, time, argparse, datetime
 
@@ -111,56 +111,66 @@ def printUsefulStuff(listOfSides,fps,biasProp):
 	
 	# now subset the list of sides into four parts. each will be a quarter of the total length of the list
 	# there is probably a better way to do this, but I don't know what it is
-	leftPart1 = listOfSides[0:int(len(listOfSides)*0.25)].count("left")
-	rightPart1 = listOfSides[0:int(len(listOfSides)*0.25)].count("right")
-	neutralPart1 = listOfSides[0:int(len(listOfSides)*0.25)].count("neutral")
+	leftPart1 = listOfSides[0:int(len(listOfSides)*0.2381)].count("left")
+	rightPart1 = listOfSides[0:int(len(listOfSides)*0.2381)].count("right")
+	neutralPart1 = listOfSides[0:int(len(listOfSides)*0.2381)].count("neutral")
 	
-	leftPart2 = listOfSides[int(len(listOfSides)*0.25):int(len(listOfSides)*0.5)].count("left")
-	rightPart2 = listOfSides[int(len(listOfSides)*0.25):int(len(listOfSides)*0.5)].count("right")
-	neutralPart2 = listOfSides[int(len(listOfSides)*0.25):int(len(listOfSides)*0.5)].count("neutral")
+	# stimuli here
+	leftPart2 = listOfSides[int(len(listOfSides)*0.2381):int(len(listOfSides)*0.4762)].count("left")
+	rightPart2 = listOfSides[int(len(listOfSides)*0.2381):int(len(listOfSides)*0.4762)].count("right")
+	neutralPart2 = listOfSides[int(len(listOfSides)*0.2381):int(len(listOfSides)*0.4762)].count("neutral")
 	
-	leftPart3 = listOfSides[int(len(listOfSides)*0.5):int(len(listOfSides)*0.75)].count("left")
-	rightPart3 = listOfSides[int(len(listOfSides)*0.5):int(len(listOfSides)*0.75)].count("right")
-	neutralPart3 = listOfSides[int(len(listOfSides)*0.5):int(len(listOfSides)*0.75)].count("neutral")
+	# stimuli here
+	leftPart3 = listOfSides[int(len(listOfSides)*0.5238):int(len(listOfSides)*0.7619)].count("left")
+	rightPart3 = listOfSides[int(len(listOfSides)*0.5238):int(len(listOfSides)*0.7619)].count("right")
+	neutralPart3 = listOfSides[int(len(listOfSides)*0.5238):int(len(listOfSides)*0.7619)].count("neutral")
 	
-	leftPart4 = listOfSides[int(len(listOfSides)*0.75):len(listOfSides)].count("left")
-	rightPart4 = listOfSides[int(len(listOfSides)*0.75):len(listOfSides)].count("right")
-	neutralPart4 = listOfSides[int(len(listOfSides)*0.75):len(listOfSides)].count("neutral")
+	leftPart4 = listOfSides[int(len(listOfSides)*0.7619):len(listOfSides)].count("left")
+	rightPart4 = listOfSides[int(len(listOfSides)*0.7619):len(listOfSides)].count("right")
+	neutralPart4 = listOfSides[int(len(listOfSides)*0.7619):len(listOfSides)].count("neutral")
 	
 	# print association time stats to the screen for each part
 	print "------------------------------\n\n\n\n\n\n\nassociation time statistics for each part of the trial:"
-	print "\n\npart 1:\nframes 0 - " + str(int(len(listOfSides)*0.25))
+	print "\n\npart 1:\nframes 0 - " + str(int(len(listOfSides)*0.2381))
 	print "seconds left: " + str(leftPart1/fps)
 	print "seconds right: " + str(rightPart1/fps)
 	print "seconds neutral: " + str(neutralPart1/fps) + "\n"
 	print checkSideBias(leftPart1,rightPart1,neutralPart1,biasProp)
 	
 	# print association time stats to the screen for each part
-	print "\n\npart 2:\nframes " + str(int(len(listOfSides)*0.25)) + " - " + str(int(len(listOfSides)*0.5))
+	print "\n\npart 2:\nframes " + str(int(len(listOfSides)*0.2381)) + " - " + str(int(len(listOfSides)*0.4762))
 	print "seconds left: " + str(leftPart2/fps)
 	print "seconds right: " + str(rightPart2/fps)
 	print "seconds neutral: " + str(neutralPart2/fps) + "\n"
-	print checkSideBias(leftPart2,rightPart2,neutralPart2,0.75)
+	print checkSideBias(leftPart2,rightPart2,neutralPart2,biasProp)
 	
 	# print association time stats to the screen for each part
-	print "\n\npart 3:\nframes " + str(int(len(listOfSides)*0.5)) + " - " + str(int(len(listOfSides)*0.75))
+	print "\n\npart 3:\nframes " + str(int(len(listOfSides)*0.5238)) + " - " + str(int(len(listOfSides)*0.7619))
 	print "seconds left: " + str(leftPart3/fps)
 	print "seconds right: " + str(rightPart3/fps)
 	print "seconds neutral: " + str(neutralPart3/fps) + "\n"
 	print checkSideBias(leftPart3,rightPart3,neutralPart3,biasProp)
 	
 	# print association time stats to the screen for each part
-	print "\n\npart 4:\n" + str(int(len(listOfSides)*0.75)) + " - " + str(int(len(listOfSides)))
+	print "\n\npart 4:\n" + str(int(len(listOfSides)*0.7619)) + " - " + str(int(len(listOfSides)))
 	print "seconds left: " + str(leftPart4/fps)
 	print "seconds right: " + str(rightPart4/fps)
 	print "seconds neutral: " + str(neutralPart4/fps) + "\n"
 	print checkSideBias(leftPart4,rightPart4,neutralPart4,biasProp)
 	
 	## check for side bias in the two parts where stimuli were present:
-	print "\n\nchecking side bias for parts 2 and 4, where male stimuli were present:\n\n"
-	print "left: " + str((leftPart2+leftPart4)/fps) + " seconds\nright: " + str((rightPart2+rightPart4)/fps) + "seconds\nneutral: " + str((neutralPart2+neutralPart4)/fps) + " seconds"
-	bias = checkSideBias(leftPart2+leftPart4,rightPart4+rightPart2,neutralPart4+neutralPart2,biasProp)
+	print "\n\nchecking side bias for parts 2 and 3, where male stimuli were present:\n\n"
+	print "left: " + str((leftPart2+leftPart3)/fps) + " seconds\nright: " + str((rightPart2+rightPart3)/fps) + "seconds\nneutral: " + str((neutralPart2+neutralPart3)/fps) + " seconds"
+	bias = checkSideBias(leftPart2+leftPart3,rightPart3+rightPart2,neutralPart3+neutralPart2,biasProp)
 	print bias
+	
+	# check for time spend in the neutral zone
+	print "\nchecking for to see whether the fish spend > 50% of the trial in the neutral part of the tank:\n"
+	time_neutral = neutralPart2 + neutralPart3
+	print "time in neutral zone during parts 2 and 3: " + str(time_neutral)
+	if time_neutral > 300:
+		print "make a note that the female spent " + str(time_neutral/600) + "% of the trial in the neutral zone"
+	
 	if bias != "looks good":
 		print "\tFEMALE MUST BE RE-TESTED. SET ASIDE FEMALE AND RE-TEST AT A LATER DATE"
 	
@@ -263,7 +273,7 @@ def getBackgroundImage(vid,numFrames):
 		final = cv2.convertScaleAbs(update)
 		# increment the counter
 		i += 1
-		print i
+		
 		# print something every 100 frames so the user knows the gears are grinding
 		if i%100 == 0:
 			print "detecting background -- on frame " + str(i) + " of " + str(numFrames)

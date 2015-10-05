@@ -4,11 +4,11 @@
 # for mate choice trials
 # started September 2015
 
-## note: This is 'alternate' due to what types of videos are presented, and for how long.
+## note: This is 'alternate' due to what types of videos are presented, and for how long. This is an attempt to decrease the time the fish is spent in the testing arena
 # the script will provide a two videos, each of which will have the following form:
-## 10 minutes of background
+## 5 minutes of background
 ## 5 minutes of stimulus presentation
-## 10 minutes of background
+## 1 minute of background
 ## 5 minutes of stimulus presentation
 
 # to future luke: best workflow:
@@ -19,7 +19,7 @@
 ### photo of whatever background you're using, of the same dimensions as the video
 ### countdown
 ## make this script executable with chmod +x makingVideosForMateChoiceExperiments.sh
-## bash +x makingVideosForMateChoiceExperiments.sh A B # for videos named A.avi, B.avi, A_flipped.avi, B_flipped.avi
+## bash - x makingVideosForMateChoiceExperiments.sh A B # for videos named A.avi, B.avi, A_flipped.avi, B_flipped.avi
 
 
 # some other things:
@@ -62,24 +62,28 @@ echo "$LOOPED2"
 
 
 ##### black video
-ffmpeg -framerate 1/600 -i black.jpg -r 25 -y black.mp4
-
-##### countdown
-# scale the countdown by the resolution of your monitor
-# make 25 fps
-# flip it
-ffmpeg -i Final10Countdown.mp4 -r 25 -vf scale=1280:1024 -y final10MinCountdown.mp4
+### 5 minutes
+ffmpeg -framerate 1/300 -i black.jpg -r 25 -y black5min.mp4
+### 1 min
+ffmpeg -framerate 1/60 -i black.jpg -r 25 -y black1min.mp4
 
 ####### background video
+### 5 minutes
 # if the dimensions of background.jpg are not even numbers, this will throw an error
 # make the video at 25 fps
 # flip it
-ffmpeg -framerate 1/600 -i [Bb]ack*.jpg -r 25 -y background10minPre.mp4
-ffmpeg -i background10minPre.mp4 -r 25 -vf "hflip,vflip,format=yuv420p" -y background10min.mp4
-
+ffmpeg -framerate 1/300 -i [Bb]ack*.jpg -r 25 -y background5minPre.mp4
+ffmpeg -i background5minPre.mp4 -r 25 -vf "hflip,vflip,format=yuv420p" -y background5min.mp4
+### 1 minute
+ffmpeg -framerate 1/60 -i [Bb]ack*.jpg -r 25 -y background1minPre.mp4
+ffmpeg -i background1minPre.mp4 -r 25 -vf "hflip,vflip,format=yuv420p" -y background1min.mp4
 
 # make inset black video in in background video
-ffmpeg -i black.mp4 -i background10min.mp4 -filter_complex "nullsrc=size=1280x1024 [base]; [0:v] setpts=PTS-STARTPTS, scale=1280x1024 [black]; [1:v] setpts=PTS-STARTPTS, scale=1280x550 [background]; [base][black] overlay=shortest=1 [tmp1]; [tmp1][background] overlay=shortest=1" -c:v libx264 -y FinalBackground10min.mp4
+### 5 min
+ffmpeg -i black5min.mp4 -i background5min.mp4 -filter_complex "nullsrc=size=1280x1024 [base]; [0:v] setpts=PTS-STARTPTS, scale=1280x1024 [black]; [1:v] setpts=PTS-STARTPTS, scale=1280x550 [background]; [base][black] overlay=shortest=1 [tmp1]; [tmp1][background] overlay=shortest=1" -c:v libx264 -y FinalBackground5min.mp4
+### 1 min
+ffmpeg -i black1min.mp4 -i background1min.mp4 -filter_complex "nullsrc=size=1280x1024 [base]; [0:v] setpts=PTS-STARTPTS, scale=1280x1024 [black]; [1:v] setpts=PTS-STARTPTS, scale=1280x550 [background]; [base][black] overlay=shortest=1 [tmp1]; [tmp1][background] overlay=shortest=1" -c:v libx264 -y FinalBackground1min.mp4
+
 
 
 ######## animations
@@ -102,7 +106,7 @@ ffmpeg -f concat -i list.txt -c copy -y "$LOOPED1"
 # trim down to 5 min
 ffmpeg -ss 00:00:00 -t 00:05:00 -i "$LOOPED1" -vf "hflip,vflip,format=yuv420p" -y "$ALMOST1"
 # embed in background
-ffmpeg -i black.mp4 -i "$ALMOST1" -filter_complex "nullsrc=size=1280x1024 [base]; [0:v] setpts=PTS-STARTPTS, scale=1280x1024 [background]; [1:v] setpts=PTS-STARTPTS, scale=1280x550 [fish]; [base][background] overlay=shortest=1 [tmp1]; [tmp1][fish] overlay=shortest=1" -c:v libx264 -y "$FINAL1"
+ffmpeg -i black5min.mp4 -i "$ALMOST1" -filter_complex "nullsrc=size=1280x1024 [base]; [0:v] setpts=PTS-STARTPTS, scale=1280x1024 [background]; [1:v] setpts=PTS-STARTPTS, scale=1280x550 [fish]; [base][background] overlay=shortest=1 [tmp1]; [tmp1][fish] overlay=shortest=1" -c:v libx264 -y "$FINAL1"
 
 ## process second video
 echo "Processing $VID1 video..."
@@ -121,7 +125,7 @@ ffmpeg -f concat -i list.txt -c copy -y "$LOOPED2"
 # trim down to 5 min
 ffmpeg -ss 00:00:00 -t 00:05:00 -i "$LOOPED2" -vf "hflip,vflip,format=yuv420p" -y "$ALMOST2"
 # embed in background
-ffmpeg -i black.mp4 -i "$ALMOST2" -filter_complex "nullsrc=size=1280x1024 [base]; [0:v] setpts=PTS-STARTPTS, scale=1280x1024 [background]; [1:v] setpts=PTS-STARTPTS, scale=1280x550 [fish]; [base][background] overlay=shortest=1 [tmp1]; [tmp1][fish] overlay=shortest=1" -c:v libx264 -y "$FINAL2"
+ffmpeg -i black5min.mp4 -i "$ALMOST2" -filter_complex "nullsrc=size=1280x1024 [base]; [0:v] setpts=PTS-STARTPTS, scale=1280x1024 [background]; [1:v] setpts=PTS-STARTPTS, scale=1280x550 [fish]; [base][background] overlay=shortest=1 [tmp1]; [tmp1][fish] overlay=shortest=1" -c:v libx264 -y "$FINAL2"
 
 
 ## at this point, you should have all the videos you need. 
@@ -130,15 +134,17 @@ ffmpeg -i black.mp4 -i "$ALMOST2" -filter_complex "nullsrc=size=1280x1024 [base]
 
 
 ## video1:
-echo "file 'FinalBackground10min.mp4'" >> vid1
+echo "file 'FinalBackground5min.mp4'" > vid1
 echo "file '$FINAL1'" >> vid1
-echo "file 'FinalBackground10min.mp4'" >> vid1
+echo "file 'FinalBackground1min.mp4'" >> vid1
 echo "file '$FINAL2'" >> vid1
+echo "file 'FinalBackground5min.mp4'" >> vid1
 ffmpeg -f concat -i vid1 -y FinalVideo1.mp4
 
 ## video2:
-echo "file 'FinalBackground10min.mp4'" >> vid2
+echo "file 'FinalBackground5min.mp4'" > vid2
 echo "file '$FINAL2'" >> vid2
-echo "file 'FinalBackground10min.mp4'" >> vid2
+echo "file 'FinalBackground1min.mp4'" >> vid2
 echo "file '$FINAL1'" >> vid2
+echo "file 'FinalBackground5min.mp4'" >> vid2
 ffmpeg -f concat -i vid2 -y FinalVideo2.mp4
