@@ -1,14 +1,11 @@
-#!/usr/bin/env
 import numpy as np
 import cv2, csv, os, re, sys, time, argparse, datetime
 
 
 '''
 started 25 August 2015
-
 31 August 2015:
 modifying script so that it queries frames from a video taken with ffmpeg
-
 typical useage:
 -- run this script at the beginning of a 10 minute acclimation period (this time can be changed with the -l parameter)
 -- outline the rectangle along the bounds of the tank
@@ -16,11 +13,8 @@ typical useage:
 -- the program starts automatically and shuts off 20 minutes later. You can tweak this amount of time with the -t parameter
 -- a video file, list of association zones occupied, a csv file containing coordinates are all saved in the directory where you ran the script from
 -- association time stats are spit out at the end. the fish is tested for side bias in the 2nd and 4th quarters of the trial period
-
 assumes there are four 'parts' to your video of each length. this only affects some of the stats the program prints at the end
-
 important: the long side of the tank must be perpendicular to the camera view
-
 this here is a working copy of a python script I hope to use to accomplish the following:
 -- track fish in mate choice tank in real time
 -- save videos from each experiment
@@ -31,15 +25,11 @@ or if the fish needs to be re-tested
 -- ensure constant framerate
 -- track progress for detecting background??
 -- incorporating all four parts of each trial
-
 help menu:  python realTimeTracker.py --help
-
 arguments:
 --pathToVideo: full or relative path to video file
 --videoName: used to save files associated with the trial. required
-
 example of useage: python realTimeTracker.py -i /Users/lukereding/Desktop/Bertha_Scototaxis.mp4 -n jill
-
 typical useage for my mate choice trials: python realTimeTracker.py -n nameOfTrialGoesHere
 '''
 
@@ -111,56 +101,66 @@ def printUsefulStuff(listOfSides,fps,biasProp):
 	
 	# now subset the list of sides into four parts. each will be a quarter of the total length of the list
 	# there is probably a better way to do this, but I don't know what it is
-	leftPart1 = listOfSides[0:int(len(listOfSides)*0.25)].count("left")
-	rightPart1 = listOfSides[0:int(len(listOfSides)*0.25)].count("right")
-	neutralPart1 = listOfSides[0:int(len(listOfSides)*0.25)].count("neutral")
+	leftPart1 = listOfSides[0:int(len(listOfSides)*0.2381)].count("left")
+	rightPart1 = listOfSides[0:int(len(listOfSides)*0.2381)].count("right")
+	neutralPart1 = listOfSides[0:int(len(listOfSides)*0.2381)].count("neutral")
 	
-	leftPart2 = listOfSides[int(len(listOfSides)*0.25):int(len(listOfSides)*0.5)].count("left")
-	rightPart2 = listOfSides[int(len(listOfSides)*0.25):int(len(listOfSides)*0.5)].count("right")
-	neutralPart2 = listOfSides[int(len(listOfSides)*0.25):int(len(listOfSides)*0.5)].count("neutral")
+	# stimuli here
+	leftPart2 = listOfSides[int(len(listOfSides)*0.2381):int(len(listOfSides)*0.4762)].count("left")
+	rightPart2 = listOfSides[int(len(listOfSides)*0.2381):int(len(listOfSides)*0.4762)].count("right")
+	neutralPart2 = listOfSides[int(len(listOfSides)*0.2381):int(len(listOfSides)*0.4762)].count("neutral")
 	
-	leftPart3 = listOfSides[int(len(listOfSides)*0.5):int(len(listOfSides)*0.75)].count("left")
-	rightPart3 = listOfSides[int(len(listOfSides)*0.5):int(len(listOfSides)*0.75)].count("right")
-	neutralPart3 = listOfSides[int(len(listOfSides)*0.5):int(len(listOfSides)*0.75)].count("neutral")
+	# stimuli here
+	leftPart3 = listOfSides[int(len(listOfSides)*0.5238):int(len(listOfSides)*0.7619)].count("left")
+	rightPart3 = listOfSides[int(len(listOfSides)*0.5238):int(len(listOfSides)*0.7619)].count("right")
+	neutralPart3 = listOfSides[int(len(listOfSides)*0.5238):int(len(listOfSides)*0.7619)].count("neutral")
 	
-	leftPart4 = listOfSides[int(len(listOfSides)*0.75):len(listOfSides)].count("left")
-	rightPart4 = listOfSides[int(len(listOfSides)*0.75):len(listOfSides)].count("right")
-	neutralPart4 = listOfSides[int(len(listOfSides)*0.75):len(listOfSides)].count("neutral")
+	leftPart4 = listOfSides[int(len(listOfSides)*0.7619):len(listOfSides)].count("left")
+	rightPart4 = listOfSides[int(len(listOfSides)*0.7619):len(listOfSides)].count("right")
+	neutralPart4 = listOfSides[int(len(listOfSides)*0.7619):len(listOfSides)].count("neutral")
 	
 	# print association time stats to the screen for each part
 	print "------------------------------\n\n\n\n\n\n\nassociation time statistics for each part of the trial:"
-	print "\n\npart 1:\nframes 0 - " + str(int(len(listOfSides)*0.25))
+	print "\n\npart 1:\nframes 0 - " + str(int(len(listOfSides)*0.2381))
 	print "seconds left: " + str(leftPart1/fps)
 	print "seconds right: " + str(rightPart1/fps)
 	print "seconds neutral: " + str(neutralPart1/fps) + "\n"
 	print checkSideBias(leftPart1,rightPart1,neutralPart1,biasProp)
 	
 	# print association time stats to the screen for each part
-	print "\n\npart 2:\nframes " + str(int(len(listOfSides)*0.25)) + " - " + str(int(len(listOfSides)*0.5))
+	print "\n\npart 2:\nframes " + str(int(len(listOfSides)*0.2381)) + " - " + str(int(len(listOfSides)*0.4762))
 	print "seconds left: " + str(leftPart2/fps)
 	print "seconds right: " + str(rightPart2/fps)
 	print "seconds neutral: " + str(neutralPart2/fps) + "\n"
-	print checkSideBias(leftPart2,rightPart2,neutralPart2,0.75)
+	print checkSideBias(leftPart2,rightPart2,neutralPart2,biasProp)
 	
 	# print association time stats to the screen for each part
-	print "\n\npart 3:\nframes " + str(int(len(listOfSides)*0.5)) + " - " + str(int(len(listOfSides)*0.75))
+	print "\n\npart 3:\nframes " + str(int(len(listOfSides)*0.5238)) + " - " + str(int(len(listOfSides)*0.7619))
 	print "seconds left: " + str(leftPart3/fps)
 	print "seconds right: " + str(rightPart3/fps)
 	print "seconds neutral: " + str(neutralPart3/fps) + "\n"
 	print checkSideBias(leftPart3,rightPart3,neutralPart3,biasProp)
 	
 	# print association time stats to the screen for each part
-	print "\n\npart 4:\n" + str(int(len(listOfSides)*0.75)) + " - " + str(int(len(listOfSides)))
+	print "\n\npart 4:\n" + str(int(len(listOfSides)*0.7619)) + " - " + str(int(len(listOfSides)))
 	print "seconds left: " + str(leftPart4/fps)
 	print "seconds right: " + str(rightPart4/fps)
 	print "seconds neutral: " + str(neutralPart4/fps) + "\n"
 	print checkSideBias(leftPart4,rightPart4,neutralPart4,biasProp)
 	
 	## check for side bias in the two parts where stimuli were present:
-	print "\n\nchecking side bias for parts 2 and 4, where male stimuli were present:\n\n"
-	print "left: " + str((leftPart2+leftPart4)/fps) + " seconds\nright: " + str((rightPart2+rightPart4)/fps) + "seconds\nneutral: " + str((neutralPart2+neutralPart4)/fps) + " seconds"
-	bias = checkSideBias(leftPart2+leftPart4,rightPart4+rightPart2,neutralPart4+neutralPart2,biasProp)
+	print "\n\nchecking side bias for parts 2 and 3, where male stimuli were present:\n\n"
+	print "left: " + str((leftPart2+leftPart3)/fps) + " seconds\nright: " + str((rightPart2+rightPart3)/fps) + "seconds\nneutral: " + str((neutralPart2+neutralPart3)/fps) + " seconds"
+	bias = checkSideBias(leftPart2+leftPart3,rightPart3+rightPart2,neutralPart3+neutralPart2,biasProp)
 	print bias
+	
+	# check for time spend in the neutral zone
+	print "\nchecking for to see whether the fish spend > 50% of the trial in the neutral part of the tank:\n"
+	time_neutral = int((neutralPart2+neutralPart3)/fps)
+	print "time in neutral zone during parts 2 and 3: " + str(time_neutral)
+	if time_neutral > 300:
+		print "make a note that the female spent " + str(time_neutral/600) + "% of the trial in the neutral zone"
+	
 	if bias != "looks good":
 		print "\tFEMALE MUST BE RE-TESTED. SET ASIDE FEMALE AND RE-TEST AT A LATER DATE"
 	
@@ -173,21 +173,6 @@ def setupVideoWriter(width, height,videoName):
 	out = cv2.VideoWriter(videoName,fourcc, 5.0, (int(width),int(height)))
 	return out, videoName
 
-# mouse callback function; draws the rectangle
-def drawRectangle(event,x,y,flags,param):
-	global ix,iy,drawing
-	if event == cv2.EVENT_LBUTTONDOWN:
-		drawing = True
-		ix,iy = x,y
-		
-	elif event == cv2.EVENT_LBUTTONUP:
-		drawing = False
-		cv2.rectangle(frameResized,(ix,iy),(x,y),(0,0,255),3)
-		# globally define the boundaries of the tank
-		global top_bound, left_bound, right_bound, lower_bound
-		top_bound, left_bound, right_bound, lower_bound = iy*2, ix*2, x*2, y*2
-		print "Rectangle bounds: "
-		print top_bound, left_bound, right_bound, lower_bound
 
 # converts a frame to HSV, blurs it, masks it to only get the tank by itself
 ## TO DO: get rid of tank bounds as global variables, include as arguments to this function
@@ -199,7 +184,7 @@ def convertToHSV(frame):
 	# apply mask to get rid of stuff outside the tank
 	mask = np.zeros((camHeight, camWidth, 3),np.uint8)
 	# use rectangle bounds for masking
-	mask[top_bound:lower_bound,left_bound:right_bound] = hsv[top_bound:lower_bound,left_bound:right_bound]
+	mask[lower_bound:top_bound,left_bound:right_bound] = hsv[lower_bound:top_bound,left_bound:right_bound]
 	return mask
 
 	
@@ -263,11 +248,47 @@ def getBackgroundImage(vid,numFrames):
 		final = cv2.convertScaleAbs(update)
 		# increment the counter
 		i += 1
-		print i
+		
 		# print something every 100 frames so the user knows the gears are grinding
 		if i%100 == 0:
 			print "detecting background -- on frame " + str(i) + " of " + str(numFrames)
 	return final
+
+def find_tank_bounds(image,name_of_trial):
+	
+	# blur the image a lot
+	blur = cv2.blur(image, (11,11))
+	# convert to hsv
+	hsv = cv2.cvtColor(blur, cv2.COLOR_BGR2HSV)
+	# get only the whitish parts
+	mask = cv2.inRange(hsv,np.array([0,0,144]),np.array([102,25,255]))
+	
+	# find all contours in the frame
+	contours = cv2.findContours(mask,cv2.RETR_TREE,cv2.CHAIN_APPROX_SIMPLE)[0]
+	# find largest contour
+	largestCon = sorted(contours, key = cv2.contourArea, reverse = True)[:1]
+	for j in largestCon:	
+		m = cv2.moments(j)		
+		centroid_x = int(m['m10']/m['m00'])
+		centroid_y = int(m['m01']/m['m00'])
+		x,y,w,h = cv2.boundingRect(j)
+		print "x,y,w,h:"
+		print x,y,w,h
+		# declare the tank bounds globally
+		global top_bound, left_bound, right_bound, lower_bound
+		top_bound, left_bound, right_bound, lower_bound = int(y) + int(h) + 50, int(x) - 50, int(x) + 50 + int(w), int(y) - 50
+		print "rectange bounds: "
+		print top_bound, left_bound, right_bound, lower_bound
+		
+		# save a photo of the tank bounds for reference:
+		# first make a copy of the image
+		image_copy = image.copy()
+		cv2.rectangle(image_copy,(left_bound, top_bound),(right_bound,lower_bound),(0,255,0),10)
+		#cv2.rectangle(image_copy,(int(x*0.8),int(y*0.8)),(int(x*0.8)+int(w*1.2),int(y*0.8)+int(h*1.2)),(0,255,0),10)
+		cv2.imwrite(str(name_of_trial) + "_tank_bounds.jpg", image_copy)
+
+	
+
 
 #########################
 ## end function declarations ####
@@ -287,25 +308,17 @@ while i <20:
 	ret,frame = cap.read()
 	i += 1
 print "grabbed first frame? " + str(ret)
-#resize the frame so that it fits on the screen 
-frameResized = cv2.resize(frame,(0,0),fx=0.5,fy=0.5)
-
-# loop to have the user draw the rectangle
-print "\n\n\n\n\ndraw rectangle from left to right.\npress esc when you're done drawing the rectangle"
-while(True):
-	cv2.namedWindow('tank')
-	cv2.setMouseCallback('tank',drawRectangle)
-	cv2.imshow('tank',frameResized)
-	k = cv2.waitKey(100)
-	if k == 27:
-		cv2.destroyAllWindows()
-		break
 
 # need to do this step after the drawing the rectangle so that we know the bounds for masking in the call to convertToHSV
 #hsv_initial = convertToHSV(frame)
 
 # calculate background image of tank for x frames
-background = getBackgroundImage(cap,2000)
+background = getBackgroundImage(cap,5000)
+
+# find the bounds of the tank:
+find_tank_bounds(background,name)
+
+# convert background to HSV and save a copy of the background image for reference
 hsv_initial = convertToHSV(background)
 cv2.imwrite(name + "_background.jpg",background)
 
@@ -381,8 +394,9 @@ while(cap.isOpened()):
 	# draw the centroids on the image
 	cv2.circle(frame,coordinates[-1],4,[0,0,255],-1)
 	
-	cv2.putText(frame,str(zone[-1]),(leftBound,lower_bound+50), cv2.FONT_HERSHEY_PLAIN, 3.0,(255,255,255))
-	cv2.putText(frame,str("frame " + str(counter)), (leftBound,lower_bound+100),cv2.FONT_HERSHEY_PLAIN, 3.0,(255,255,255))
+	cv2.putText(frame,str(name),(int(camWidth/2),50), cv2.FONT_HERSHEY_PLAIN, 3.0,(255,255,255))
+	cv2.putText(frame,str(zone[-1]),(leftBound,top_bound+50), cv2.FONT_HERSHEY_PLAIN, 3.0,(255,255,255))
+	cv2.putText(frame,str("frame " + str(counter)), (leftBound,top_bound+100),cv2.FONT_HERSHEY_PLAIN, 3.0,(255,255,255))
 	
 	#resize image for the laptop
 	frame = cv2.resize(frame,(0,0),fx=0.5,fy=0.5)

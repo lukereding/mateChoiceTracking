@@ -1,0 +1,5 @@
+recording the videos at the same time as tracking them leads to really poor frame rates
+
+the solution:
+-- use ffmpeg to record the videos. it's faster and ligher than using opencv and python
+-- after the videos have been recorded for a while, call the realTimeTracking script on the ffmpeg video as it records
