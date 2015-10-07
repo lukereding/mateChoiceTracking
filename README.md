@@ -28,3 +28,12 @@ I'm using this repo to keep track of all the code I run for analzying position d
   * The tracker pulls each frame from the video file and subtracts it from the reference frame. Dark fish on a light background leave a characteristic signature. The tracker identifies groups of pixels that confirm to this signature, then filters these to identify the blob of pixels that is mostly likely the fish.
   * The script saves a list of the side of the tank the fish was on in each frame, as well as the tracking coordinates. 
   * Any other information you could possibly want about the trial, the bounds of the tank, etc., are in the log file. You could use some really simply `grep` commands to pull out any information you want.
+  * 
+ 
+
+### `ethogram.R`
+I've found that I often want a quick and dirty way to visualize what a female is doing over time in the tank. Plotting the raw tracking data is too noisy and busy to be able to extract some meaning from it. `ethogram.R` takes the .txt file of sides occupied in each frame of a video (this is an output from `realTimeTrackerShort.py`) and makes a handy representation of which side of the tank the fish occupied throughout the trial.
+
+The plot is broken up into five rows. Each row corresponds to one meaningful part of the trial. Colors represent different parts of the tank. `stim` refers to one type of male animation; as written now, it doesn't identify which male this is.
+
+![ethogram](https://github.com/lukereding/mateChoiceTracking/raw/master/plotting/ethogram_example.png)
