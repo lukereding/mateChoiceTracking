@@ -107,7 +107,7 @@ ethogram <- function(path,name){
   draw_rectangles(sides_vector,i=bounds[9],end_i = bounds[10], y_position=bounds[2]*0,size=bounds[2],part=5,offset=off,col=c("grey60","grey90","grey20"))
   print("drew part 5")
   # draw legend
-  legend(x = bounds[2]*0.45, y= bounds[2]*0.6, c("left","right","neutral","stim1","stim2"), fill=c("grey60","grey20","grey90","#440154FF","#35B779FF"),border=NA,ncol=2,bty="o", box.lwd=0.3) 
+  legend(x = bounds[2]*0.45, y= bounds[2]*0.6, c("left","right","neutral","male 1","male 2"), fill=c("grey60","grey20","grey90","#440154FF","#35B779FF"),border=NA,ncol=2,bty="o", box.lwd=0.3) 
   
   
   # label
@@ -121,4 +121,5 @@ ethogram <- function(path,name){
   print(chunks)
   on.exit(par(op))
 }
+
 ethogram("/Volumes/LPRLABBKP/transitivity_trials/Madeline_Large_vs_Small.txt", name="madeline")
