@@ -23,7 +23,7 @@ arguments:
 example of useage: python realTimeTracker.py -i /Users/lukereding/Desktop/Bertha_Scototaxis.mp4 -n Bertha -f 10
 
 '''
-
+print time.strftime('%X %x %Z')
 
 # initialize some constants, lists, csv writer
 # construct the argument parse and parse the arguments
