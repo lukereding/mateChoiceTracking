@@ -332,6 +332,9 @@ zoneSize = int((right_bound-left_bound) / 3)
 leftBound = left_bound + zoneSize
 rightBound = left_bound + (2*zoneSize)
 
+print "left bound: " + str(leftBound)
+print "right bound: " + str(rightBound)
+
 # set up video writer specifying size (MUST be same size as input) and name (command line argument)
 #videoWriter, pathToVideo = setupVideoWriter(camWidth, camHeight,name)
 
