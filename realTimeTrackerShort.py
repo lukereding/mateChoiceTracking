@@ -279,6 +279,12 @@ def find_tank_bounds(image,name_of_trial):
 		cv2.rectangle(image_copy,(left_bound, top_bound),(right_bound,lower_bound),(0,255,0),10)
 		#cv2.rectangle(image_copy,(int(x*0.8),int(y*0.8)),(int(x*0.8)+int(w*1.2),int(y*0.8)+int(h*1.2)),(0,255,0),10)
 		cv2.imwrite(str(name_of_trial) + "_tank_bounds.jpg", image_copy)
+		
+		# save tank bound coordinates to a file for parsing later if need be
+		coord_file = open(str(name_of_trial) + "_tank_bounds.txt", "w")
+		coord_file.write("top bound: " + str(top_bound) + "\n" + "left bound: " + str(left_bound) + "\n" + "right bound: " + str(right_bound) + "\n" + "lower bound: " + str(lower_bound) + "\n")
+		coord_file.close()
+		
 
 #########################
 ## end function declarations ####
