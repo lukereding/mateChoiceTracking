@@ -152,7 +152,7 @@ def printUsefulStuff(listOfSides,fps,biasProp):
 	
 	print "time in neutral zone during parts 2 and 3: " + str(time_neutral)
 	if time_neutral > 300:
-		print "make a note that the female spent " + str(time_neutral/600) + "% of the trial in the neutral zone"
+		print "female spent more than half the time in the neutral zone. RETEST FEMALE."
 	
 	if bias != "looks good":
 		print "\tFEMALE MUST BE RE-TESTED. SET ASIDE FEMALE AND RE-TEST AT A LATER DATE"
@@ -390,7 +390,7 @@ while(cap.isOpened()):
 	cv2.circle(frame,coordinates[-1],4,[0,0,255],-1)
 	
 
-	cv2.putText(frame,str(name),(int(camWidth/2),50), cv2.FONT_HERSHEY_PLAIN, 3.0,(255,255,255))
+	cv2.putText(frame,str(name),(int(camWidth/5),50), cv2.FONT_HERSHEY_PLAIN, 3.0,(255,255,255))
 	cv2.putText(frame,str(zone[-1]),(leftBound,top_bound+50), cv2.FONT_HERSHEY_PLAIN, 3.0,(255,255,255))
 	cv2.putText(frame,str("frame " + str(counter)), (leftBound,top_bound+100),cv2.FONT_HERSHEY_PLAIN, 3.0,(255,255,255))
 	
