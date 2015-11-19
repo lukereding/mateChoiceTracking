@@ -35,11 +35,11 @@ Best workflow:
 + clone this repo.
 + cd into this directory
 + add the following ingredients:
-    + four animations. If you're have animations called A.avi and B.avi, you need A_flipped.avi and B_flipped.avi as well where the background in flipped
+    + four animations. If you're have animations called `A.avi` and `B.avi`, you need `A_flipped.avi` and `B_flipped.avi` as well where the background in flipped
     + photo of whatever background you're using, of the same dimensions as the video
     + countdown
-+ make this script executable with chmod +x makingVideosForMateChoiceExperiments.sh
-+ bash +x makingVideosForMateChoiceExperiments.sh A B # for videos named A.avi, B.avi, A_flipped.avi, B_flipped.avi
++ make this script executable with `chmod +x makingVideosForMateChoiceExperiments.sh`
++ `bash +x makingVideosForMateChoiceExperiments.sh A B` # for videos named A.avi, B.avi, A_flipped.avi, B_flipped.avi
 
 ### `ethogram.R`
 I've found that I often want a quick and dirty way to visualize what a female is doing over time in the tank. Plotting the raw tracking data is too noisy and busy to be able to extract some meaning from it. `ethogram.R` takes the .txt file of sides occupied in each frame of a video (this is an output from `realTimeTrackerShort.py`) and makes a handy representation of which side of the tank the fish occupied throughout the trial.
